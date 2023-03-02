@@ -3,6 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 using namespace std;
 typedef unsigned int uint;
 
@@ -27,7 +31,7 @@ float vertices_giro[size_vertices];
 
 int index_vertices = 3, index_indices = 0, index_indices_value = 1;
 double inclinacion = 0;
-
+glm::mat4 transform = glm::mat4(1.0f);
 
 void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -36,9 +40,8 @@ float radianes(float angulo);
 float angulo(float radianes);
 float convert_new_coor_x(float x, float y, double grados);
 float convert_new_coor_y(float x, float y, int grados);
-void giro_ellipse(float vertices[]);
-float getDeltaTime();
 
+float getDeltaTime();
 float k1234_notime(float fuerza, float masa);
 float velocidad(float vo, float fuerza, float masa, float delta_time);
 float k1(float vo, float fuerza, float masa, float time_back);
@@ -48,15 +51,16 @@ float k4(float vo, float fuerza, float masa, float time_back, float delta_time);
 float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time, float back_time);
 float posiciones_y(float vo, float pos_o, float masa, float delta_time, float time_back);
 
-//void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
+	"uniform mat4 transform; \n"
     "out vec3 ourColor;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos, 1.0);\n"
+    "   gl_Position = transform * vec4(aPos, 1.0);\n"
     "   ourColor = aColor;\n"
     "}\0";
 
@@ -75,7 +79,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
+#ifdef _APPLE_
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
@@ -88,7 +92,7 @@ int main(){
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    //glfwSetKeyCallback(window, key_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -103,7 +107,7 @@ int main(){
 
     int a = 20; //radio mayor
     int b = 15; //radio menor
-    int escala = 50;
+    int escala = 1000;
     float origen_x = 0, origen_y = 0;
 
     //cout<<"Ingrese el radio mayor: "; cin>>a;
@@ -149,30 +153,7 @@ int main(){
     indices[index_indices] = 1;
 
 
-    /**************************************************************************/
-    int grados_giro = 2; //otro cout
-    int grado_inicio = 0;
-
-    for(int grado = grado_inicio ; grado < 360 ; grado+=grados_giro){
-        vertices_giro[0] = 0.0f;
-        vertices_giro[1] = 0.0f;
-        vertices_giro[2] = 0.0f;
-
-        int index_vertices_giro = 3;
-        int index_ellipse_origen_x = 3 , index_ellipse_origen_y = 4;
-
-        for(int j=0 ; j<n_triangulos ; j++){
-            vertices_giro[index_vertices_giro] = convert_new_coor_x(vertices[index_ellipse_origen_x],vertices[index_ellipse_origen_y], grado);
-            index_vertices_giro++;
-            vertices_giro[index_vertices_giro] = convert_new_coor_y(vertices[index_ellipse_origen_x],vertices[index_ellipse_origen_y], grado);
-            index_vertices_giro++;  
-            vertices_giro[index_vertices_giro] = 0.0f;
-            index_vertices_giro++;
-            index_ellipse_origen_x+=3;
-            index_ellipse_origen_y+=3;
-        }
-    }
-    
+    /**************************************************************************/    
     //generamos el vector de tiempo aqui -> para generar el vector de velocidades
     //tiempo nos ayudará a iterar en la "tabla" y determinar el momento antes del impacto
     /**************************************************************************/
@@ -186,7 +167,7 @@ int main(){
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_giro), vertices_giro, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -199,7 +180,7 @@ int main(){
 
     glBindVertexArray(0);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     uint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -249,7 +230,15 @@ int main(){
         
         processInput(window);
 
+
+		//render
+        transform = glm::rotate(transform, (float)glm::radians(0.1), glm::vec3(0.0f, 0.0f, 1.0f));
+        //transform = glm::translate(transform, glm::vec3(0.005f, -0.005f, 0.000f));
         glUseProgram(shaderProgram);
+        //transform
+        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
         glBindVertexArray(VAO);
 
         glDrawElements(GL_TRIANGLES, size_index, GL_UNSIGNED_INT, 0);
@@ -268,13 +257,22 @@ int main(){
 }
 
 void processInput(GLFWwindow *window){
-    float deltaTime{ getDeltaTime() };
+    //float deltaTime{ getDeltaTime() };
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, width, height);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
+        cout<<"si presiona ESPACIO"<<endl;
+    }
 }
 
 float escala_radio(float radio, float escala){
@@ -343,7 +341,7 @@ float k4(float vo, float fuerza, float masa, float time_back, float delta_time){
 //retornaremos de igual manera la posicion de cada uno para llenar una tabla en main
 float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time, float time_back){
     float tiempo = 0; //tiempo 0 (init)
-    float k1_ , k2_ , k3_ , k4_, float posicion;
+    float k1_ , k2_ , k3_ , k4_, posicion;
     k1_ = k1(vo, fuerza, masa, time_back);
     k2_ = k2(vo, fuerza, masa, time_back, delta_time);
     k3_ = k3(vo, fuerza, masa, time_back, delta_time);
@@ -356,7 +354,7 @@ float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_t
 
 float posiciones_y(float vo, float pos_o, float masa, float delta_time, float time_back){
     float tiempo = 0; //tiempo 0 (init)
-    float fuerza, k1_ , k2_ , k3_ , k4_, float posicion;
+    float fuerza, k1_ , k2_ , k3_ , k4_, posicion;
 
     fuerza = masa * (-1*g);
 
