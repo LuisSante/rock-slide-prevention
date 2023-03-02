@@ -11,6 +11,7 @@ const uint SCR_WIDTH = 2000;
 const uint SCR_HEIGHT = 1000;
 
 const float pi = 3.1415;
+const float g = 9.81;
 
 const int salto_angulos_draw = 10;
 const int n_triangulos = 360 / salto_angulos_draw;
@@ -37,14 +38,16 @@ float convert_new_coor_x(float x, float y, double grados);
 float convert_new_coor_y(float x, float y, int grados);
 void giro_ellipse(float vertices[]);
 float getDeltaTime();
+
 float k1234_notime(float fuerza, float masa);
 float velocidad(float vo, float fuerza, float masa, float delta_time);
 float k1(float vo, float fuerza, float masa, float time_back);
 float k2(float vo, float fuerza, float masa, float time_back, float delta_time);
 float k3(float vo, float fuerza, float masa, float time_back, float delta_time);
 float k4(float vo, float fuerza, float masa, float time_back, float delta_time);
-float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time);
-float posiciones_y(float vo, float pos_o, float masa, float delta_time);
+float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time, float back_time);
+float posiciones_y(float vo, float pos_o, float masa, float delta_time, float time_back);
+
 //void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 const char *vertexShaderSource = "#version 330 core\n"
@@ -145,6 +148,8 @@ int main(){
     index_indices++;
     indices[index_indices] = 1;
 
+
+    /**************************************************************************/
     int grados_giro = 2; //otro cout
     int grado_inicio = 0;
 
@@ -167,6 +172,10 @@ int main(){
             index_ellipse_origen_y+=3;
         }
     }
+    
+    //generamos el vector de tiempo aqui -> para generar el vector de velocidades
+    //tiempo nos ayudará a iterar en la "tabla" y determinar el momento antes del impacto
+    /**************************************************************************/
 
     uint VBO, VAO, EBO;
 
@@ -292,32 +301,73 @@ float k1234_notime(float fuerza, float masa){
     return float(fuerza/masa);
 }
 
+//recurrencia
 float velocidad(float vo, float fuerza, float masa, float delta_time){
-    
+    float tiempo = 0; //tiempo 0 (init)
+    float k1, k2, k3, k4, velocidad;
+    k1 = k1234_notime(fuerza, masa);
+    k2 = k1234_notime(fuerza, masa);
+    k3 = k1234_notime(fuerza, masa);
+    k4 = k1234_notime(fuerza, masa);
+
+    velocidad = vo + (1/6)*(k1 + (2*k2) + (2*k3) + k4)*(delta_time);
+
+    return velocidad;
+
 }
 
 float k1(float vo, float fuerza, float masa, float time_back){
-
+    float fxm = float(fuerza/masa);
+    float k1_ = vo + (fxm * time_back);
+    return k1_; 
 }
 
 float k2(float vo, float fuerza, float masa, float time_back, float delta_time){
-
+    float fxm = float(fuerza/masa);
+    float k2_ = vo + (fxm * (time_back + (0.5*delta_time)));
+    return k2_;
 }
 
 float k3(float vo, float fuerza, float masa, float time_back, float delta_time){
-
+    float fxm = float(fuerza/masa);
+    float k3_ = vo + (fxm * (time_back + (0.5*delta_time)));
+    return k3_;
 }
 
 float k4(float vo, float fuerza, float masa, float time_back, float delta_time){
-
+    float fxm = float(fuerza/masa);
+    float k4_ = vo + (fxm * (time_back + delta_time));
+    return k4_;
 }
 
-float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time){
+//retornaremos de igual manera la posicion de cada uno para llenar una tabla en main
+float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time, float time_back){
+    float tiempo = 0; //tiempo 0 (init)
+    float k1_ , k2_ , k3_ , k4_, float posicion;
+    k1_ = k1(vo, fuerza, masa, time_back);
+    k2_ = k2(vo, fuerza, masa, time_back, delta_time);
+    k3_ = k3(vo, fuerza, masa, time_back, delta_time);
+    k4_ = k4(vo, fuerza, masa, time_back, delta_time);
 
+    posicion = pos_o + (1/6)*(k1_ + (2*k2_) + (2*k3_) + k4_)*(delta_time);
+
+    return posicion;
 }
 
-float posiciones_y(float vo, float pos_o, float masa, float delta_time){
+float posiciones_y(float vo, float pos_o, float masa, float delta_time, float time_back){
+    float tiempo = 0; //tiempo 0 (init)
+    float fuerza, k1_ , k2_ , k3_ , k4_, float posicion;
 
+    fuerza = masa * (-1*g);
+
+    k1_ = k1(vo, fuerza, masa, time_back);
+    k2_ = k2(vo, fuerza, masa, time_back, delta_time);
+    k3_ = k3(vo, fuerza, masa, time_back, delta_time);
+    k4_ = k4(vo, fuerza, masa, time_back, delta_time);
+
+    posicion = pos_o + (1/6)*(k1_ + (2*k2_) + (2*k3_) + k4_)*(delta_time);
+
+    return posicion;
 }
 
 float getDeltaTime(){
