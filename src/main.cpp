@@ -15,9 +15,10 @@ typedef const int cint;
 // settings
 const uint SCR_WIDTH = 2000;
 const uint SCR_HEIGHT = 1000;
+glm::mat4 transform = glm::mat4(1.0f);
 
 const float pi = 3.1415;
-cint escala = 30000;
+cint escala = 1000;
 //const float g = 9.81;
 
 cint salto_angulos_draw = 10;
@@ -39,18 +40,24 @@ uint indices_talud[size_coor_talud*3];
 
 int index_vertices = 3, index_indices = 0, index_indices_value = 1;
 double inclinacion = 0;
-glm::mat4 transform = glm::mat4(1.0f);
 
-double t = 0.0;                     // tiempo inicial
-double x = 0.0;                     // posición inicial en el eje x
-double y = 0.0;                     // posición inicial en el eje y
-double vx = 155.8844625;                  // velocidad inicial en el eje x
-double vy = 90.0;                  // velocidad inicial en el eje y
-double theta = 30.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
-double g = 9.81;                    // aceleración gravitatoria (en m/s^2)
-double dt = 1e-6;                   // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
+float t = 0.0;                     // tiempo inicial
+float x = 0.0;                     // posición inicial en el eje x
+float y = 0.0;                     // posición inicial en el eje y
+float vx = 155.8844625;                  // velocidad inicial en el eje x
+float vy = 90.0;                  // velocidad inicial en el eje y
+float theta = 30.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
+float g = 9.81;                    // aceleración gravitatoria (en m/s^2)
+float dt = 1e-6;                   // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
 const int n = 21;
-double x_array[n], y_array[n], vx_array[n], vy_array[n], theta_array[n];
+float x_array[n];
+float y_array[n]; 
+float vx_array[n]; 
+float vy_array[n]; 
+float theta_array[n];
+float delta_pos_x[n];
+float delta_pos_y[n];
+float delta_tetha[n];
 
 
 void processInput(GLFWwindow *window);
@@ -62,6 +69,7 @@ float convert_new_coor_x(float x, float y, double grados);
 float convert_new_coor_y(float x, float y, int grados);
 
 float getDeltaTime();
+//void move();
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -84,6 +92,19 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "   FragColor = vec4(ourColor, 1.0f);\n"
     "}\n\0";
 
+const char* vertexShaderSource2 = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+const char* fragmentShaderSource2 = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+"}\n\0";
 
 
 int main(){
@@ -118,8 +139,8 @@ int main(){
 
     /*******/
 
-    int a = 200; //radio mayor
-    int b = 150; //radio menor
+    int a = 20; //radio mayor
+    int b = 15; //radio menor
     float origen_x = 0, origen_y = 0;
     x_array[0] = x;
     y_array[0] = y;
@@ -174,9 +195,9 @@ int main(){
     for (int i = 1; i < n; i++)
     {
         // Calcular los valores de k1, k2, k3 y k4 para la actualización de las variables
-        double k1_x, k2_x, k3_x, k4_x, k1_y, k2_y, k3_y, k4_y;
-        double k1_vx, k2_vx, k3_vx, k4_vx, k1_vy, k2_vy, k3_vy, k4_vy;
-        double k1_theta, k2_theta, k3_theta, k4_theta;
+        float k1_x, k2_x, k3_x, k4_x, k1_y, k2_y, k3_y, k4_y;
+        float k1_vx, k2_vx, k3_vx, k4_vx, k1_vy, k2_vy, k3_vy, k4_vy;
+        float k1_theta, k2_theta, k3_theta, k4_theta;
 
         k1_x = vx;
         k1_vx = 0.0;
@@ -223,10 +244,19 @@ int main(){
         t += dt;
 
         // Imprimir los valores de las posiciones y velocidades en cada instante de tiempo
-        for (int i = 0; i < n; i++)
+        /*for (int i = 0; i < n; i++)
         {
             cout << "t = " << i * dt << ", x = " << x_array[i] << ", y = " << y_array[i] << ", vx = " << vx_array[i] << ", vy = " << vy_array[i] << ", theta = " << theta_array[i]<< endl;
-        }
+        }*/
+    }
+
+    delta_pos_x[0] = x_array[0];
+    delta_pos_y[0] = y_array[0];
+    delta_tetha[0] = theta_array[0];
+    for(int i = 1; i < n; i++){
+        delta_pos_x[i] = (x_array[i] - x_array[i - 1])/100000;
+        delta_pos_y[i] = (y_array[i] - y_array[i - 1])/100000;
+        delta_tetha[i] = theta_array[i] - theta_array[i]/10;
     }
 
     /******************************************************************************************************/
@@ -253,7 +283,7 @@ int main(){
 
     glBindVertexArray(0);
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     float talud_x , talud_y;
 
@@ -296,7 +326,72 @@ int main(){
 
     glUseProgram(shaderProgram);
 
-    
+     // vertex shader
+    unsigned int vertexShader2 = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader2, 1, &vertexShaderSource2, NULL);
+    glCompileShader(vertexShader2);
+    // check for shader compile errors
+    int successT;
+    char infoLogT[512];
+    glGetShaderiv(vertexShader2, GL_COMPILE_STATUS, &successT);
+    if (!successT)
+    {
+        glGetShaderInfoLog(vertexShader2, 512, NULL, infoLogT);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLogT << std::endl;
+    }
+    // fragment shader
+    unsigned int fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
+    glCompileShader(fragmentShader2);
+    // check for shader compile errors
+    glGetShaderiv(fragmentShader2, GL_COMPILE_STATUS, &successT);
+    if (!successT)
+    {
+        glGetShaderInfoLog(fragmentShader2, 512, NULL, infoLogT);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLogT << std::endl;
+    }
+    // link shaders
+    unsigned int shaderProgram2 = glCreateProgram();
+    glAttachShader(shaderProgram2, vertexShader2);
+    glAttachShader(shaderProgram2, fragmentShader2);
+    glLinkProgram(shaderProgram2);
+    // check for linking errors
+    glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &successT);
+    if (!successT) {
+        glGetProgramInfoLog(shaderProgram2, 512, NULL, infoLogT);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLogT << std::endl;
+    }
+    glDeleteShader(vertexShader2);
+    glDeleteShader(fragmentShader2);
+
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float vertices2[] = {
+        -0.06f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+
+        0.0f, 0.0f, 0.0f,
+        0.045f, -0.045f, 0.0f,
+
+        0.045f, -0.045f, 0.0f,
+        0.9f, -0.045f, 0.0f
+    };
+
+    unsigned int VBO2, VAO2;
+    glGenVertexArrays(1, &VAO2);
+    glGenBuffers(1, &VBO2);
+    glBindVertexArray(VAO2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    int pos = 0;
     while (!glfwWindowShouldClose(window)){
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -304,10 +399,14 @@ int main(){
         processInput(window);
 
 		//render
-        transform = glm::rotate(transform, (float)glm::radians(0.1f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //transform = glm::translate(transform, glm::vec3(0.0001f, 0.0001f, 0.0f));
         glUseProgram(shaderProgram);
         //transform
+        //transform = glm::translate(transform, glm::vec3(x_array[pos]/1e8, y_array[pos]/1e8, 0.0f));
+        transform = glm::rotate(transform, (float)glm::radians(theta_array[pos]/100), glm::vec3(0.0f, 0.0f, 1.0f));
+        pos++;
+
+        if(pos == n) pos = 0;
+
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
@@ -315,6 +414,10 @@ int main(){
         //glBindVertexArray(VBO_talud);
 
         glDrawElements(GL_TRIANGLES, size_index, GL_UNSIGNED_INT, 0);
+
+        glUseProgram(shaderProgram2);
+        glBindVertexArray(VAO2); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+        glDrawArrays(GL_LINES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -324,6 +427,10 @@ int main(){
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
+
+    glDeleteVertexArrays(1, &VAO2);
+    glDeleteBuffers(1, &VBO2);
+    glDeleteProgram(shaderProgram2);
 
     glfwTerminate();
 
@@ -345,7 +452,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
-        //movimiento();
+        //move();
     }
 }
 
@@ -368,6 +475,13 @@ float convert_new_coor_x(float x, float y, double grados){
 float convert_new_coor_y(float x, float y, int grados){
     return float(y*cos(radianes(grados)) + x*sin(radianes(grados)));
 }
+
+/*void move(){
+    for(int i=0; i<n ; i++){
+        transform = glm::translate(transform, glm::vec3(delta_pos_x[i], delta_pos_y[i], 0.0f));
+        transform = glm::rotate(transform, (float)glm::radians(delta_tetha[i]), glm::vec3(0.0f, 0.0f, 1.0f));
+    }    
+}*/
 
 float getDeltaTime(){
     static float lastTime{ 0.0f };
