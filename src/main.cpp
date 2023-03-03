@@ -15,7 +15,7 @@ const uint SCR_WIDTH = 2000;
 const uint SCR_HEIGHT = 1000;
 
 const float pi = 3.1415;
-const float g = 9.81;
+//const float g = 9.81;
 
 const int salto_angulos_draw = 10;
 const int n_triangulos = 360 / salto_angulos_draw;
@@ -26,8 +26,13 @@ const int size_index = 3 * n_triangulos;
 
 float vertices[size_vertices]; //coordenada de origen 
 uint indices[size_index];
-float vertices_giro[size_vertices];
 
+const int size_coor_talud = 4;
+
+float talud[size_coor_talud*3];
+uint indices_talud[size_coor_talud*3];
+
+//float vertices_giro[size_vertices];
 
 int index_vertices = 3, index_indices = 0, index_indices_value = 1;
 double inclinacion = 0;
@@ -41,15 +46,11 @@ float angulo(float radianes);
 float convert_new_coor_x(float x, float y, double grados);
 float convert_new_coor_y(float x, float y, int grados);
 
+double f(double t, double x, double y, double vx, double vy);
+double g(double t, double x, double y, double vx, double vy);
+void rungeKutta(double t0, double x0, double y0, double vx0, double vy0, double tf, double h, double *t, double *x, double *y, double *vx, double *vy, int n);
+
 float getDeltaTime();
-float k1234_notime(float fuerza, float masa);
-float velocidad(float vo, float fuerza, float masa, float delta_time);
-float k1(float vo, float fuerza, float masa, float time_back);
-float k2(float vo, float fuerza, float masa, float time_back, float delta_time);
-float k3(float vo, float fuerza, float masa, float time_back, float delta_time);
-float k4(float vo, float fuerza, float masa, float time_back, float delta_time);
-float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time, float back_time);
-float posiciones_y(float vo, float pos_o, float masa, float delta_time, float time_back);
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -72,6 +73,22 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "   FragColor = vec4(ourColor, 1.0f);\n"
     "}\n\0";
 
+/*const char *vertexShaderSource_talud = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "out vec3 ourColor;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos, 1.0);\n"
+    "   ourColor = aColor;\n"
+    "}\0";
+
+const char *fragmentShaderSource_talud = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "in vec3 ourColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(ourColor, 1.0f);\n"
+    "}\n\0";*/
 
 int main(){
     glfwInit();
@@ -107,7 +124,7 @@ int main(){
 
     int a = 20; //radio mayor
     int b = 15; //radio menor
-    int escala = 1000;
+    int escala = 100;
     float origen_x = 0, origen_y = 0;
 
     //cout<<"Ingrese el radio mayor: "; cin>>a;
@@ -155,6 +172,31 @@ int main(){
 
     /**************************************************************************/    
     //generamos el vector de tiempo aqui -> para generar el vector de velocidades
+
+
+    double t0 = 0.0; // tiempo inicial
+    double x0 = 0.0; // posición inicial en el eje x
+    double y0 = 0.0; // posición inicial en el eje y
+    double vx0 = 155.9; // velocidad inicial en el eje x
+    double vy0 = 90; // velocidad inicial en el eje y
+    double tf = 20.0; // tiempo final
+    double h = 1; // paso de integración
+
+    int n = (tf - t0)/h + 1; // número de puntos
+
+    double *t = new double[n]; // array para el tiempo
+    double *x = new double[n]; // array para la posición en el eje x
+    double *y = new double[n]; // array para la posición en el eje y
+    double *vx = new double[n]; // array para la velocidad en el eje x
+    double *vy = new double[n]; // array para la velocidad en el eje y
+
+    rungeKutta(t0, x0, y0, vx0, vy0, tf, h, t, x, y, vx, vy, n); // llama a la función rungeKutta
+
+    // imprime los resultados
+    for (int i = 0; i < n; i++) {
+        cout << "t = " << t[i] << " vx= " << vx[i] << "   x= " << x[i] << " vy = " << vy[i] << "   y = " << y[i] << endl;
+    }
+
     //tiempo nos ayudará a iterar en la "tabla" y determinar el momento antes del impacto
     /**************************************************************************/
 
@@ -181,6 +223,30 @@ int main(){
     glBindVertexArray(0);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    /* ***************************************************************/
+    float talud_x , talud_y;
+    /*for(int k = 0 ; k < 3*size_coor_talud ; k+=3){
+        cout<<"Ingrese el vertice de su talud en x: "; cin>>talud_x;
+        cout<<"Ingrese el vertice de su talud en y: "; cin>>talud_y;
+        talud[k] = float(talud_x/escala);
+        talud[k+1] = float(talud_y/escala);
+        talud[k+2] = 0.0f;
+    }
+
+    unsigned int VBO_talud;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_talud);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(talud), talud, GL_STATIC_DRAW);
+
+    // Definir cómo se interpretan los datos de los vértices
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Dibujar las líneas
+    glDrawArrays(GL_LINES, 0, size_coor_talud);/*
+
+    /* ***************************************************************/
 
     uint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -221,6 +287,27 @@ int main(){
 
     glUseProgram(shaderProgram);
 
+
+    /********************************************************************/
+
+    /*uint vertexShader_talud = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader_talud, 1, &vertexShaderSource_talud, NULL);
+    glCompileShader(vertexShader_talud);
+
+    uint fragmentShader_talud = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader_talud, 1, &fragmentShaderSource_talud, NULL);
+    glCompileShader(fragmentShader_talud);
+
+    uint shaderProgram_talud = glCreateProgram();
+    glAttachShader(shaderProgram_talud, vertexShader_talud);
+    glAttachShader(shaderProgram_talud, fragmentShader_talud);
+    glLinkProgram(shaderProgram_talud);
+
+    glDeleteShader(vertexShader_talud);
+    glDeleteShader(fragmentShader_talud);
+
+    glUseProgram(shaderProgram_talud);*/
+
     /*****************************************************************************************************/
 
     
@@ -230,16 +317,16 @@ int main(){
         
         processInput(window);
 
-
 		//render
-        transform = glm::rotate(transform, (float)glm::radians(0.1), glm::vec3(0.0f, 0.0f, 1.0f));
-        //transform = glm::translate(transform, glm::vec3(0.005f, -0.005f, 0.000f));
+        transform = glm::rotate(transform, (float)glm::radians(0.1f), glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::translate(transform, glm::vec3(0.0001f, 0.0001f, 0.0f));
         glUseProgram(shaderProgram);
         //transform
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
         glBindVertexArray(VAO);
+        //glBindVertexArray(VBO_talud);
 
         glDrawElements(GL_TRIANGLES, size_index, GL_UNSIGNED_INT, 0);
 
@@ -253,6 +340,14 @@ int main(){
     glDeleteProgram(shaderProgram);
 
     glfwTerminate();
+
+    
+    // libera la memoria de los arrays
+    delete[] t;
+    delete[] x;
+    delete[] y;
+    delete[] vx;
+    delete[] vy;
     return 0;
 }
 
@@ -295,77 +390,66 @@ float convert_new_coor_y(float x, float y, int grados){
     return float(y*cos(radianes(grados)) + x*sin(radianes(grados)));
 }
 
-float k1234_notime(float fuerza, float masa){
-    return float(fuerza/masa);
+double f(double t, double x, double y, double vx, double vy) {
+    double m = 120.0; // masa del objeto
+    double F = 0.0; // fuerza neta que actúa sobre el objeto
+    double ax = F/m; // aceleración en el eje x
+    return ax; // devuelve la aceleración en el eje x
 }
 
-//recurrencia
-float velocidad(float vo, float fuerza, float masa, float delta_time){
-    float tiempo = 0; //tiempo 0 (init)
-    float k1, k2, k3, k4, velocidad;
-    k1 = k1234_notime(fuerza, masa);
-    k2 = k1234_notime(fuerza, masa);
-    k3 = k1234_notime(fuerza, masa);
-    k4 = k1234_notime(fuerza, masa);
-
-    velocidad = vo + (1/6)*(k1 + (2*k2) + (2*k3) + k4)*(delta_time);
-
-    return velocidad;
-
+double g(double t, double x, double y, double vx, double vy) {
+    double m = 120.0; // masa del objeto
+    double g = 9.81;
+    double F = m*g; // fuerza neta que actúa sobre el objeto
+    double ay = -F/m; // aceleración en el eje y
+    cout<<ay;
+    return ay; // devuelve la aceleración en el eje y
 }
 
-float k1(float vo, float fuerza, float masa, float time_back){
-    float fxm = float(fuerza/masa);
-    float k1_ = vo + (fxm * time_back);
-    return k1_; 
-}
+void rungeKutta(double t0, double x0, double y0, double vx0, double vy0, double tf, double h, double *t, double *x, double *y, double *vx, double *vy, int n) {
+    double k1x, k2x, k3x, k4x;
+    double k1y, k2y, k3y, k4y;
+    double k1vx, k2vx, k3vx, k4vx;
+    double k1vy, k2vy, k3vy, k4vy;
+    double ti = t0;
+    double xi = x0;
+    double yi = y0;
+    double vxi = vx0;
+    double vyi = vy0;
+    
+    for (int i = 0; i < n; i++) {
+        t[i] = ti;
+        x[i] = xi;
+        y[i] = yi;
+        vx[i] = vxi;
+        vy[i] = vyi;
+        
+        k1x = h * vxi;
+        k1y = h * vyi;
+        k1vx = h * f(ti, xi, yi, vxi, vyi);
+        k1vy = h * g(ti, xi, yi, vxi, vyi);
+        
+        k2x = h * (vxi + k1vx/2);
+        k2y = h * (vyi + k1vy/2);
+        k2vx = h * f(ti + h/2, xi + k1x/2, yi + k1y/2, vxi + k1vx/2, vyi + k1vy/2);
+        k2vy = h * g(ti + h/2, xi + k1x/2, yi + k1y/2, vxi + k1vx/2, vyi + k1vy/2);
+        
+        k3x = h * (vxi + k2vx/2);
+        k3y = h * (vyi + k2vy/2);
+        k3vx = h * f(ti + h/2, xi + k2x/2, yi + k2y/2, vxi + k2vx/2, vyi + k2vy/2);
+        k3vy = h * g(ti + h/2, xi + k2x/2, yi + k2y/2, vxi + k2vx/2, vyi + k2vy/2);
 
-float k2(float vo, float fuerza, float masa, float time_back, float delta_time){
-    float fxm = float(fuerza/masa);
-    float k2_ = vo + (fxm * (time_back + (0.5*delta_time)));
-    return k2_;
-}
+        k4x = h * (vxi + k3vx/2);
+        k4y = h * (vyi + k3vy/2);
+        k4vx = h * f(ti + h, xi + k3x, yi + k3y, vxi + k3vx, vyi + k3vy);
+        k4vy = h * g(ti + h, xi + k3x, yi + k3y, vxi + k3vx, vyi + k3vy);
 
-float k3(float vo, float fuerza, float masa, float time_back, float delta_time){
-    float fxm = float(fuerza/masa);
-    float k3_ = vo + (fxm * (time_back + (0.5*delta_time)));
-    return k3_;
-}
-
-float k4(float vo, float fuerza, float masa, float time_back, float delta_time){
-    float fxm = float(fuerza/masa);
-    float k4_ = vo + (fxm * (time_back + delta_time));
-    return k4_;
-}
-
-//retornaremos de igual manera la posicion de cada uno para llenar una tabla en main
-float posiciones_x(float vo, float pos_o,float fuerza, float masa, float delta_time, float time_back){
-    float tiempo = 0; //tiempo 0 (init)
-    float k1_ , k2_ , k3_ , k4_, posicion;
-    k1_ = k1(vo, fuerza, masa, time_back);
-    k2_ = k2(vo, fuerza, masa, time_back, delta_time);
-    k3_ = k3(vo, fuerza, masa, time_back, delta_time);
-    k4_ = k4(vo, fuerza, masa, time_back, delta_time);
-
-    posicion = pos_o + (1/6)*(k1_ + (2*k2_) + (2*k3_) + k4_)*(delta_time);
-
-    return posicion;
-}
-
-float posiciones_y(float vo, float pos_o, float masa, float delta_time, float time_back){
-    float tiempo = 0; //tiempo 0 (init)
-    float fuerza, k1_ , k2_ , k3_ , k4_, posicion;
-
-    fuerza = masa * (-1*g);
-
-    k1_ = k1(vo, fuerza, masa, time_back);
-    k2_ = k2(vo, fuerza, masa, time_back, delta_time);
-    k3_ = k3(vo, fuerza, masa, time_back, delta_time);
-    k4_ = k4(vo, fuerza, masa, time_back, delta_time);
-
-    posicion = pos_o + (1/6)*(k1_ + (2*k2_) + (2*k3_) + k4_)*(delta_time);
-
-    return posicion;
+        ti += h;
+        xi += (k1x + 2*k2x + 2*k3x + k4x)/6;
+        yi += (k1y + 2*k2y + 2*k3y + k4y)/6;
+        vxi += (k1vx + 2*k2vx + 2*k3vx + k4vx)/6;
+        vyi += (k1vy + 2*k2vy + 2*k3vy + k4vy)/6;
+    }
 }
 
 float getDeltaTime(){
