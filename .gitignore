@@ -1,1 +1,4 @@
-*.exe
+#ingorar carpetas no_open
+no_open
+
+
