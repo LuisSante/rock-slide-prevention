@@ -7,7 +7,7 @@
             "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${fileDirname}", 
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

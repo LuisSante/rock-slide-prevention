@@ -1,4 +1,6 @@
 #ingorar carpetas no_open
+*.exe
+*.dll
 no_open
-
-
+shaders
+lib
