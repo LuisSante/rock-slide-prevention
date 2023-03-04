@@ -1,5 +1,7 @@
 #include <iostream>
 #include <math.h>
+#include <chrono>  // para la medición del tiempo
+#include <thread>  // para la gestión de hilos
 #include "rungek.hpp"
 
 #include <glad/glad.h>
@@ -13,12 +15,13 @@ typedef unsigned int uint;
 typedef const int cint;
 
 // settings
-const uint SCR_WIDTH = 2000;
-const uint SCR_HEIGHT = 1000;
+const uint SCR_WIDTH = 4000;
+const uint SCR_HEIGHT = 4000;
 glm::mat4 transform = glm::mat4(1.0f);
 
 const float pi = 3.1415;
-cint escala = 1000;
+cint escala = 3500;
+//cint escala = 800;
 //const float g = 9.81;
 
 cint salto_angulos_draw = 10;
@@ -48,7 +51,7 @@ float vx = 155.8844625;                  // velocidad inicial en el eje x
 float vy = 90.0;                  // velocidad inicial en el eje y
 float theta = 30.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
 float g = 9.81;                    // aceleración gravitatoria (en m/s^2)
-float dt = 1e-6;                   // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
+float dt = 1;                   // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
 const int n = 21;
 float x_array[n];
 float y_array[n]; 
@@ -58,7 +61,6 @@ float theta_array[n];
 float delta_pos_x[n];
 float delta_pos_y[n];
 float delta_tetha[n];
-
 
 void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -141,7 +143,7 @@ int main(){
 
     int a = 20; //radio mayor
     int b = 15; //radio menor
-    float origen_x = 0, origen_y = 0;
+    float origen_x = -0.5, origen_y = 0.5;
     x_array[0] = x;
     y_array[0] = y;
     vx_array[0] = vx;
@@ -165,9 +167,9 @@ int main(){
     //llenar array de vertices (x,y,z=0)
     for(int i = 0; i < n_triangulos; i++){
         inclinacion = inclinacion + salto_angulos_draw;
-        vertices[index_vertices] = float(escala_x * cos(radianes(inclinacion)));  //coordenada X
+        vertices[index_vertices] = origen_x + float(escala_x * cos(radianes(inclinacion)));  //coordenada X
         index_vertices++;
-        vertices[index_vertices] = float(escala_y * sin(radianes(inclinacion)));  //coordenada Y
+        vertices[index_vertices] = origen_y + float(escala_y * sin(radianes(inclinacion)));  //coordenada Y
         index_vertices++; 
         vertices[index_vertices] = 0.0f;               //coordenada Z
         index_vertices++;
@@ -254,9 +256,14 @@ int main(){
     delta_pos_y[0] = y_array[0];
     delta_tetha[0] = theta_array[0];
     for(int i = 1; i < n; i++){
-        delta_pos_x[i] = (x_array[i] - x_array[i - 1])/100000;
-        delta_pos_y[i] = (y_array[i] - y_array[i - 1])/100000;
-        delta_tetha[i] = theta_array[i] - theta_array[i]/10;
+        delta_pos_x[i] = (x_array[i] - x_array[i - 1]);
+        delta_pos_y[i] = (y_array[i] - y_array[i - 1]);
+        delta_tetha[i] = float(theta_array[i] - theta_array[i-1]);
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        cout << "delta_x = " << delta_pos_x[i]/escala << " delta_y= "<< delta_pos_y[i]/escala << " delta_theta= "<< delta_tetha[i] << endl;
     }
 
     /******************************************************************************************************/
@@ -392,20 +399,35 @@ int main(){
     glBindVertexArray(0);
 
     int pos = 0;
+    double lastTime = glfwGetTime();
+    double deltaTime = 0.0;
+    double desiredFPS = 60.0;
+    double frameTime = 1.0 / desiredFPS;
     while (!glfwWindowShouldClose(window)){
+
+        double currentTime = glfwGetTime();
+        deltaTime += currentTime - lastTime;
+        lastTime = currentTime;
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         
         processInput(window);
 
 		//render
-        glUseProgram(shaderProgram);
+         if (deltaTime >= frameTime) {
+            // Dibujar un cuadro
+            glUseProgram(shaderProgram);
+            // Reducir el tiempo acumulado por la duración de un cuadro
+            deltaTime -= frameTime;
+        }
+        
         //transform
-        //transform = glm::translate(transform, glm::vec3(x_array[pos]/1e8, y_array[pos]/1e8, 0.0f));
-        transform = glm::rotate(transform, (float)glm::radians(theta_array[pos]/100), glm::vec3(0.0f, 0.0f, 1.0f));
+        if( pos <= n){
+            transform = glm::translate(transform, glm::vec3(delta_pos_x[pos]/escala, delta_pos_y[pos]/escala, 0.0f));
+            transform = glm::rotate(transform, (float)glm::radians(delta_tetha[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
+        }
         pos++;
-
-        if(pos == n) pos = 0;
 
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
@@ -421,6 +443,8 @@ int main(){
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     glDeleteVertexArrays(1, &VAO);
