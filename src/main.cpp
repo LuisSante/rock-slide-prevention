@@ -21,7 +21,7 @@ glm::mat4 transform = glm::mat4(1.0f);
 
 const float pi = 3.1415;
 cint escala = 3500;
-// cint escala = 800;
+//cint escala = 800;
 // const float g = 9.81;
 
 cint salto_angulos_draw = 10;
@@ -44,15 +44,15 @@ uint indices_talud[size_coor_talud * 3];
 int index_vertices = 3, index_indices = 0, index_indices_value = 1;
 double inclinacion = 0;
 
-float t = 0.0;                     // tiempo inicial
-float x = 0.0;                     // posición inicial en el eje x
-float y = 0.0;                     // posición inicial en el eje y
-float vx = 155.8844625;            // velocidad inicial en el eje x
-float vy = 90.0;                   // velocidad inicial en el eje y
-float theta = 30.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
-float g = 9.81;                    // aceleración gravitatoria (en m/s^2)
-float dt = 1e-6;                   // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
-const int n = 20;
+float t = 0.0;                    // tiempo inicial
+float x = 0.0;                    // posición inicial en el eje x
+float y = 0.0;                    // posición inicial en el eje y
+float vx = 90;                    // velocidad inicial en el eje x
+float vy = 90.0;                  // velocidad inicial en el eje y
+float theta = 0.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
+float g = 9.81;                   // aceleración gravitatoria (en m/s^2)
+float dt = 1;                     // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
+const int n = 21;
 float x_array[n];
 float y_array[n];
 float vx_array[n];
@@ -60,7 +60,7 @@ float vy_array[n];
 float theta_array[n];
 float delta_pos_x[n];
 float delta_pos_y[n];
-float delta_tetha[n];
+//float delta_tetha[n];
 
 void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -132,8 +132,8 @@ int main()
     // codigo CALCULAR VERTICES E INDICES
     /*******/
 
-    int a = 20; // radio mayor
-    int b = 15; // radio menor
+    int a = 50; // radio mayor
+    int b = 30; // radio menor
     float origen_x = 0, origen_y = 0;
     x_array[0] = x;
     y_array[0] = y;
@@ -247,13 +247,18 @@ int main()
 
     delta_pos_x[0] = x_array[0];
     delta_pos_y[0] = y_array[0];
-    delta_tetha[0] = theta_array[0];
+    //delta_tetha[0] = theta_array[0];
     for (int i = 1; i < n; i++)
     {
         delta_pos_x[i] = (x_array[i] - x_array[i - 1]);
         delta_pos_y[i] = (y_array[i] - y_array[i - 1]);
-        delta_tetha[i] = float(theta_array[i] - theta_array[i - 1]);
+        //delta_tetha[i] = float(theta_array[i] - theta_array[i - 1]);
     }
+
+    /*for (int i = 0; i < n; i++)
+    {
+        cout << " theta = " << theta_array[i] << " , delta theta = " << delta_tetha[i] << endl;
+    }*/
 
     float vertices_talud[] = {
         -0.06f, 0.0f, 0.0f,
@@ -448,8 +453,9 @@ int main()
         if (pos <= n)
         {
             transform = glm::translate(transform, glm::vec3(delta_pos_x[pos] / escala, delta_pos_y[pos] / escala, 0.0f));
-            transform = glm::rotate(transform, (float)glm::radians(delta_tetha[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
-        } pos++;
+            transform = glm::rotate(transform, (float)glm::radians(theta_array[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
+            pos++;
+        }
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
@@ -465,7 +471,7 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
 
     glDeleteVertexArrays(1, &VAO);
