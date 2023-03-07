@@ -16,7 +16,7 @@ void movimiento_proyectil(float t, float x, float y, float &vx, float &vy, float
     // Calcular la velocidad angular en el plano xy
     //float w = vx * std::sin(theta) + vy * std::cos(theta);
     //float w = vx * std::sin(theta) + vy * std::cos(theta);
-    float w = 0.2 ;
+    float w = 0.4 ;
 
     // Calcular la fuerza de resistencia del aire
     float b = 0.000; // coeficiente de resistencia del aire

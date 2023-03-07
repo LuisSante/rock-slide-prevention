@@ -2,7 +2,9 @@
 #include <math.h>
 #include <chrono> // para la medición del tiempo
 #include <thread> // para la gestión de hilos
+
 #include "rungek.hpp"
+#include "intersection.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -21,8 +23,8 @@ glm::mat4 transform = glm::mat4(1.0f);
 
 const float pi = 3.1415;
 cint escala = 3500;
-//cint escala = 800;
-// const float g = 9.81;
+// cint escala = 800;
+//  const float g = 9.81;
 
 cint salto_angulos_draw = 10;
 cint n_triangulos = 360 / salto_angulos_draw;
@@ -60,7 +62,7 @@ float vy_array[n];
 float theta_array[n];
 float delta_pos_x[n];
 float delta_pos_y[n];
-//float delta_tetha[n];
+// float delta_tetha[n];
 
 void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -132,13 +134,16 @@ int main()
     // codigo CALCULAR VERTICES E INDICES
     /*******/
 
-    int a = 50; // radio mayor
-    int b = 30; // radio menor
+    //int a = 50; // radio mayor
+    //int b = 30; // radio menor
     float origen_x = 0, origen_y = 0;
     x_array[0] = x;
     y_array[0] = y;
     vx_array[0] = vx;
     vy_array[0] = vy;
+    float a = 2.5, b = 1.5;
+    float Xd = 8.045, Yd = 8.045;
+    float theta_talud = 10 * 3.1416 / 180;
 
     // cout<<"Ingrese el radio mayor: "; cin>>a;
     // cout<<"Ingrese el radio menor: "; cin>>b;
@@ -247,12 +252,12 @@ int main()
 
     delta_pos_x[0] = x_array[0];
     delta_pos_y[0] = y_array[0];
-    //delta_tetha[0] = theta_array[0];
+    // delta_tetha[0] = theta_array[0];
     for (int i = 1; i < n; i++)
     {
         delta_pos_x[i] = (x_array[i] - x_array[i - 1]);
         delta_pos_y[i] = (y_array[i] - y_array[i - 1]);
-        //delta_tetha[i] = float(theta_array[i] - theta_array[i - 1]);
+        // delta_tetha[i] = float(theta_array[i] - theta_array[i - 1]);
     }
 
     /*for (int i = 0; i < n; i++)
@@ -269,6 +274,41 @@ int main()
 
         0.045f, -0.045f, 0.0f,
         0.9f, -0.045f, 0.0f};
+
+    float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
+    float inversa[MAX_DIMENSION][MAX_DIMENSION] = {};
+    float vertices_resta[6], vertices_locales_talud[6];
+
+    float matriz_angulos[MAX_DIMENSION][MAX_DIMENSION] = {
+        {cos(theta_talud), -sin(theta_talud)},
+        {sin(theta_talud), cos(theta_talud)}};
+
+    if (!calcular_inversa(matriz_angulos, 2, inversa))
+    {
+        cout << "La matriz no tiene inversa" << endl;
+        return 0;
+    }
+
+    for (int i = 0; i < 6; i += 3)
+    {
+        vertices_resta[i] = Xd;
+        vertices_resta[i + 1] = Yd;
+        vertices_resta[i + 2] = 0;
+    }
+
+    for (int i = 0; i < 6; i++)
+    {
+        vertices_locales_talud[i] = vertices_talud_[i] - vertices_resta[i];
+    }
+
+    float x1_elipse_local = vertices_locales_talud[0];
+    float y1_elipse_local = vertices_locales_talud[1];
+    float x2_elipse_local = vertices_locales_talud[3];
+    float y2_elipse_local = vertices_locales_talud[4];
+    float x1_, y1_, x2_, y2_;
+
+    mult_matriz_array(inversa, x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local, x1_, y1_, x2_, y2_);
+    machine(matriz_angulos, 2, a, b, x1_, y1_, x2_, y2_, Xd, Yd);
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
