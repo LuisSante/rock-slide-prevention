@@ -171,7 +171,7 @@ void mult_matriz_array(float inversa[MAX_DIMENSION][MAX_DIMENSION], float x1_eli
     y2_ = (inversa[1][0] * x2_elipse_local) + (inversa[1][1] * y2_elipse_local);
 }
 
-void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], int dimension, float a, float b, float x1, float y1, float x2, float y2, int xd, int yd)
+void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], int dimension, float a, float b, float x1, float y1, float x2, float y2, int xd, int yd, float& punto_medio_x , float& punto_medio_y)
 {
     float ml = (a / b) * ((y2 - y1) / (x2 - x1));
     float bl = (y1 / b) - (ml * (x1 / a));
@@ -221,8 +221,10 @@ void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], int dimension, float a,
 
     cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
 
-    float punto_medio_x = (_x_1 + _x_2) / 2;
-    float punto_medio_y = (_y_1 + _y_2) / 2;
+    punto_medio_x = (_x1_ + _x2_) / 2;
+    punto_medio_y = (_y1_ + _y2_) / 2;
 }
+
+
 
 #endif
