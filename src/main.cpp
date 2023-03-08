@@ -7,6 +7,8 @@
 #include "intersection.hpp"
 #include "draw.hpp"
 #include "locales.hpp"
+#include "superposition.hpp"
+#include "speed.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -40,10 +42,14 @@ uint indices[size_index];
 
 /*runge kutta*/
 float t = 0.0; // tiempo inicial
+//float w = 0.2;
+float w = 0.5;
 /*float x = 0.0;                    // posición inicial en el eje x
 float y = 0.0;                    // posición inicial en el eje y*/
-float vx = 155.8844625;                   // velocidad inicial en el eje x
-float vy = 90.0;                  // velocidad inicial en el eje y
+/*float vx = 155.8844625;           // velocidad inicial en el eje x
+float vy = 90.0;                  // velocidad inicial en el eje y*/
+float vx = 2;           // velocidad inicial en el eje x
+float vy = -2; 
 float theta = 0.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
 const float g = 9.81;             // aceleración gravitatoria (en m/s^2)
 float dt = 1;                     // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
@@ -71,6 +77,7 @@ uint indices_talud[size_coor_talud * 3];
 /*calculo del punto medio*/
 float inversa[MAX_DIMENSION][MAX_DIMENSION];
 float vertices_resta[6], vertices_locales_talud[6];
+float ml, bl;
 float x1_, y1_, x2_, y2_;
 float x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local;
 float punto_medio_x, punto_medio_y;
@@ -151,16 +158,27 @@ const char *fragmentShaderSource_grid = "#version 330 core\n"
 
 int main()
 {
-    int a = 50; // radio mayor
-    int b = 30; // radio menor
+    //float a = 50; // radio mayor
+    //float b = 30; // radio menor
     float origen_x = 0, origen_y = 0;
     x_array[0] = origen_y;
     y_array[0] = origen_x;
     vx_array[0] = vx;
     vy_array[0] = vy;
-    // loat a = 2.5, b = 1.5;
+    float a = 3, b = 2;
+    float Xd = 16, Yd = 7;
+    float theta_talud = 34 * 3.1416 / 180;
+
+    /*float origen_x = 0, origen_y = 0;
+    x_array[0] = origen_y;
+    y_array[0] = origen_x;
+    vx_array[0] = vx;
+    vy_array[0] = vy;
+    float a = 2.5, b = 1.5;
     float Xd = 8.045, Yd = 8.045;
-    float theta_talud = 10 * 3.1416 / 180;
+    float theta_talud = 10 * 3.1416 / 180;*/
+
+    //origen x y origen y = xd y yd
 
     // cout<<"Ingrese el radio mayor: "; cin>>a;
     // cout<<"Ingrese el radio menor: "; cin>>b;
@@ -178,7 +196,8 @@ int main()
         0.045f, -0.045f, 0.0f,
         0.9f, -0.045f, 0.0f};
 
-    float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
+    //float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
+    float vertices_talud_[6] = {10, 10, 0, 20, 0, 0};
 
     const float escala_x = escala_radio(a, escala);
     const float escala_y = escala_radio(b, escala);
@@ -189,12 +208,13 @@ int main()
 
     vertices_elipse(origen_x, origen_y, escala_x, escala_y, inclinacion, salto_angulos_draw, n_triangulos, index_vertices, vertices);
     indices_elipse(n_triangulos, index_indices, index_indices_value, indices);
-    move(x_array, y_array, vx_array, vy_array, theta_array, delta_pos_x, delta_pos_y, vx, vy, theta, g, t, dt, origen_x, origen_y, a, b, n);
+    move(x_array, y_array, vx_array, vy_array, theta_array, delta_pos_x, delta_pos_y, vx, vy, theta, g, t, dt, origen_x, origen_y, a, b, n, w);
     calcular_inversa(matriz_angulos, 2, inversa);
-    vertices_locales(vertices_resta, vertices_talud_ , vertices_locales_talud, Xd, Yd, x1_elipse_local, y1_elipse_local , x2_elipse_local , y2_elipse_local);
+    vertices_locales(vertices_resta, vertices_talud_, vertices_locales_talud, Xd, Yd, x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local);
     mult_matriz_array(inversa, x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local, x1_, y1_, x2_, y2_);
-    machine(matriz_angulos, 2, a, b, x1_, y1_, x2_, y2_, Xd, Yd, punto_medio_x, punto_medio_y);
-    cout << punto_medio_x << " " << punto_medio_y << endl;
+    machine(matriz_angulos, ml, bl, 2, a, b, x1_, y1_, x2_, y2_, Xd, Yd, punto_medio_x, punto_medio_y);
+    superposition(ml, bl, matriz_angulos , vertices_talud_ , a , b, Xd, Yd);
+    velocidad(vertices_talud_, Xd, Yd, punto_medio_x, punto_medio_y , vx, vy , w);
 
     /******************************************************************************************************************************/
 

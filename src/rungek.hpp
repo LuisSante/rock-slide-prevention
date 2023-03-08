@@ -7,7 +7,7 @@
 using namespace std;
 
 // Definir la función que describe el movimiento del proyectil
-void movimiento_proyectil(float t, float x, float y, float &vx, float &vy, float &theta, float g, int a, int b_)
+void movimiento_proyectil(float t, float x, float y, float &vx, float &vy, float &theta, float g, int a, int b_, float w)
 {
     // Calcular las aceleraciones en los ejes x e y
     float ax = 0.0;
@@ -16,7 +16,7 @@ void movimiento_proyectil(float t, float x, float y, float &vx, float &vy, float
     // Calcular la velocidad angular en el plano xy
     // float w = vx * std::sin(theta) + vy * std::cos(theta);
     // float w = vx * std::sin(theta) + vy * std::cos(theta);
-    float w = 0.2;
+    //float w = 0.2;
 
     // Calcular la fuerza de resistencia del aire
     float b = 0.000; // coeficiente de resistencia del aire
@@ -64,7 +64,7 @@ void movimiento_proyectil(float t, float x, float y, float &vx, float &vy, float
     theta += (k1_theta + 2.0 * k2_theta + 2.0 * k3_theta + k4_theta) / 6.0;
 }
 
-void move(float x_array[], float y_array[], float vx_array[], float vy_array[], float theta_array[], float delta_pos_x[], float delta_pos_y[], float vx , float vy, float theta, const float g, float t, float dt,  float x , float y, int a, int b, int n)
+void move(float x_array[], float y_array[], float vx_array[], float vy_array[], float theta_array[], float delta_pos_x[], float delta_pos_y[], float vx , float vy, float theta, const float g, float t, float dt,  float x , float y, int a, int b, int n, int w)
 {
     for (int i = 1; i < n; i++)
     {
@@ -78,27 +78,26 @@ void move(float x_array[], float y_array[], float vx_array[], float vy_array[], 
         k1_y = vy;
         k1_vy = 0.0;
         k1_theta = 0.0;
-        movimiento_proyectil(t, x, y, k1_vx, k1_vy, k1_theta, g, a, b);
-
+        movimiento_proyectil(t, x, y, k1_vx, k1_vy, k1_theta, g, a, b,w);
         k2_x = vx + k1_vx * dt / 2.0;
         k2_vx = 0.0;
         k2_y = vy + k1_vy * dt / 2.0;
         k2_vy = 0.0;
         k2_theta = 0.0;
-        movimiento_proyectil(t + dt / 2.0, x + k1_x * dt / 2.0, y + k1_y * dt / 2.0, k2_vx, k2_vy, k2_theta, g, a, b);
+        movimiento_proyectil(t + dt / 2.0, x + k1_x * dt / 2.0, y + k1_y * dt / 2.0, k2_vx, k2_vy, k2_theta, g, a, b,w);
 
         k3_x = vx + k2_vx * dt / 2.0;
         k3_vx = 0.0;
         k3_y = vy + k2_vy * dt / 2.0;
         k3_vy = 0.0;
         k3_theta = 0.0;
-        movimiento_proyectil(t + dt / 2.0, x + k2_x * dt / 2.0, y + k2_y * dt / 2.0, k3_vx, k3_vy, k3_theta, g, a, b);
+        movimiento_proyectil(t + dt / 2.0, x + k2_x * dt / 2.0, y + k2_y * dt / 2.0, k3_vx, k3_vy, k3_theta, g, a, b,w);
         k4_x = vx + k3_vx * dt;
         k4_vx = 0.0;
         k4_y = vy + k3_vy * dt;
         k4_vy = 0.0;
         k4_theta = 0.0;
-        movimiento_proyectil(t + dt, x + k3_x * dt, y + k3_y * dt, k4_vx, k4_vy, k4_theta, g, a, b);
+        movimiento_proyectil(t + dt, x + k3_x * dt, y + k3_y * dt, k4_vx, k4_vy, k4_theta, g, a, b,w);
 
         // Actualizar las variables con el método Runge-Kutta de cuarto orden
         x += (k1_x + 2.0 * k2_x + 2.0 * k3_x + k4_x) / 6.0;

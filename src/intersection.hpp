@@ -171,20 +171,20 @@ void mult_matriz_array(float inversa[MAX_DIMENSION][MAX_DIMENSION], float x1_eli
     y2_ = (inversa[1][0] * x2_elipse_local) + (inversa[1][1] * y2_elipse_local);
 }
 
-void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], int dimension, float a, float b, float x1, float y1, float x2, float y2, int xd, int yd, float& punto_medio_x , float& punto_medio_y)
+void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], float& ml , float& bl, int dimension, float a, float b, float x1, float y1, float x2, float y2, int xd, int yd, float& punto_medio_x , float& punto_medio_y)
 {
-    float ml = (a / b) * ((y2 - y1) / (x2 - x1));
-    float bl = (y1 / b) - (ml * (x1 / a));
+    ml = (a / b) * ((y2 - y1) / (x2 - x1));
+    bl = (y1 / b) - (ml * (x1 / a));
 
     // ecuacion cuadrativa
-    float e_a = ((ml * ml) + 1);
-    float e_b = 2 * ml * bl;
-    float e_c = ((bl * bl) - 1);
+    double e_a = ((ml * ml) + 1);
+    double e_b = 2 * ml * bl;
+    double e_c = ((bl * bl) - 1);
 
     // raices
-    float discriminante = e_b * e_b - 4 * e_a * e_c;
+    double discriminante = e_b * e_b - 4 * e_a * e_c;
     double raizDiscriminante = sqrt(abs(discriminante));
-    float s1, s2;
+    double s1, s2;
     float parteReal, parteImaginaria;
     if (discriminante > 0)
     {
@@ -200,10 +200,12 @@ void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], int dimension, float a,
     {
         parteReal = -e_b / (2 * e_a);
         parteImaginaria = raizDiscriminante / (2 * e_a);
+        cout << "No hay interseccion"<< endl;
     }
 
-    float p1, p2;
-    float _x_1, _y_1, _x_2, _y_2;
+
+    double p1, p2;
+    double _x_1, _y_1, _x_2, _y_2;
     p1 = (ml * s1) + bl;
     p2 = (ml * s2) + bl;
 
@@ -212,17 +214,19 @@ void machine(float matriz[MAX_DIMENSION][MAX_DIMENSION], int dimension, float a,
     _x_2 = s2 * a;
     _y_2 = p2 * b;
 
-    // cout<<_x_1<<" "<<_y_1<<" "<<_x_2<<" "<<_y_2<<endl;
+    //cout<<_x_1<<" "<<_y_1<<" "<<_x_2<<" "<<_y_2<<endl;
 
-    float _x1_ = ((matriz[0][0] * _x_1) + (matriz[0][1] * _y_1)) + xd;
-    float _y1_ = ((matriz[1][0] * _x_1) + (matriz[1][1] * _y_1)) + yd;
-    float _x2_ = ((matriz[0][0] * _x_2) + (matriz[0][1] * _y_2)) + xd;
-    float _y2_ = ((matriz[1][0] * _x_2) + (matriz[1][1] * _y_2)) + yd;
+    double _x1_ = ((matriz[0][0] * _x_1) + (matriz[0][1] * _y_1)) + xd;
+    double _y1_ = ((matriz[1][0] * _x_1) + (matriz[1][1] * _y_1)) + yd;
+    double _x2_ = ((matriz[0][0] * _x_2) + (matriz[0][1] * _y_2)) + xd;
+    double _y2_ = ((matriz[1][0] * _x_2) + (matriz[1][1] * _y_2)) + yd;
 
     cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
 
     punto_medio_x = (_x1_ + _x2_) / 2;
     punto_medio_y = (_y1_ + _y2_) / 2;
+
+    cout<<"(XC , YC) = ("<<punto_medio_x<<" ,"<<punto_medio_y<<")"<<endl;
 }
 
 
