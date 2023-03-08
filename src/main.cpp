@@ -3,10 +3,9 @@
 #include <chrono> // para la medición del tiempo
 #include <thread> // para la gestión de hilos
 
+#include "draw.hpp"
 #include "rungek.hpp"
 #include "intersection.hpp"
-#include "draw.hpp"
-#include "locales.hpp"
 #include "superposition.hpp"
 #include "speed.hpp"
 
@@ -17,50 +16,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 using namespace std;
-typedef unsigned int uint;
 
 // settings
-const uint SCR_WIDTH = 4000;
-const uint SCR_HEIGHT = 4000;
+const unsigned int SCR_WIDTH = 4000;
+const unsigned int SCR_HEIGHT = 4000;
 glm::mat4 transform = glm::mat4(1.0f);
-
-/*dibujar elipse*/
-const int escala = 4000;
-int index_vertices = 3;
-int index_indices = 0;
-int index_indices_value = 1;
-double inclinacion = 0;
-const int salto_angulos_draw = 10;
-const int n_triangulos = 360 / salto_angulos_draw;
-const int size_vertices = 3 * (n_triangulos + 1);
-const int size_index = 3 * n_triangulos;
-float vertices[size_vertices]; // coordenada de origen
-uint indices[size_index];
-// const int escala = 800;
-//  const float g = 9.81;
-// const int pendiente = 2*pi / n_triangulos;
-
-/*runge kutta*/
-float t = 0.0; // tiempo inicial
-//float w = 0.2;
-float w = 0.5;
-/*float x = 0.0;                    // posición inicial en el eje x
-float y = 0.0;                    // posición inicial en el eje y*/
-/*float vx = 155.8844625;           // velocidad inicial en el eje x
-float vy = 90.0;                  // velocidad inicial en el eje y*/
-float vx = 2;           // velocidad inicial en el eje x
-float vy = -2; 
-float theta = 0.0 * 3.14 / 180.0; // ángulo de giro inicial (en radianes)
-const float g = 9.81;             // aceleración gravitatoria (en m/s^2)
-float dt = 1;                     // incremento de tiempo// Declarar los arrays para almacenar las posiciones y velocidades en x e y
-const int n = 21;
-float x_array[n];
-float y_array[n];
-float vx_array[n];
-float vy_array[n];
-float theta_array[n];
-float delta_pos_x[n];
-float delta_pos_y[n];
 
 // control de velocidad de ejecución
 int pos = 0;
@@ -68,19 +28,6 @@ double lastTime = glfwGetTime();
 double deltaTime = 0.0;
 double desiredFPS = 60.0;
 double frameTime = 1.0 / desiredFPS;
-
-/*coordenadas del talud*/
-const int size_coor_talud = 4;
-float talud[size_coor_talud * 3];
-uint indices_talud[size_coor_talud * 3];
-
-/*calculo del punto medio*/
-float inversa[MAX_DIMENSION][MAX_DIMENSION];
-float vertices_resta[6], vertices_locales_talud[6];
-float ml, bl;
-float x1_, y1_, x2_, y2_;
-float x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local;
-float punto_medio_x, punto_medio_y;
 
 void processInput(GLFWwindow *window)
 {
@@ -98,11 +45,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-}
-
-float escala_radio(float radio, float escala)
-{
-    return radio / escala;
 }
 
 const char *vertexShaderSource = "#version 330 core\n"
@@ -137,54 +79,44 @@ const char *fragmentShaderSource_talud = "#version 330 core\n"
                                          "{\n"
                                          "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
                                          "}\n\0";
-
-const char *vertexShaderSource_grid = "#version 330 core\n"
-                                      "layout (location = 0) in vec2 bPos;\n"
-                                      "uniform mat4 model;\n"
-                                      "uniform mat4 view;\n"
-                                      "uniform mat4 projection;\n"
-                                      "void main()\n"
-                                      "{\n"
-                                      "   gl_Position = projection * view * model * vec4(bPos, 0.0, 1.0);\n"
-                                      "}\0";
-
-const char *fragmentShaderSource_grid = "#version 330 core\n"
-                                        "out vec4 FragColor;\n"
-                                        "uniform vec3 color;\n"
-                                        "void main()\n"
-                                        "{\n"
-                                        "   FragColor = vec4(color, 1.0f);\n"
-                                        "}\n\0";
-
 int main()
 {
-    //float a = 50; // radio mayor
-    //float b = 30; // radio menor
+    float escala = 3500;
     float origen_x = 0, origen_y = 0;
-    x_array[0] = origen_y;
-    y_array[0] = origen_x;
-    vx_array[0] = vx;
-    vy_array[0] = vy;
-    float a = 3, b = 2;
-    float Xd = 16, Yd = 7;
-    float theta_talud = 34 * 3.1416 / 180;
+    float Xd = origen_x / escala;
+    float Yd = origen_y / escala;
 
-    /*float origen_x = 0, origen_y = 0;
-    x_array[0] = origen_y;
-    y_array[0] = origen_x;
-    vx_array[0] = vx;
-    vy_array[0] = vy;
-    float a = 2.5, b = 1.5;
-    float Xd = 8.045, Yd = 8.045;
-    float theta_talud = 10 * 3.1416 / 180;*/
+    float radio_mayor = 40, radio_menor = 30;
+    float a = radio_mayor / escala, b = radio_menor / escala;
+    float vertices[39]; // coordenada de origen
+    unsigned int indices[39];
 
-    //origen x y origen y = xd y yd
+    /*runge kutta*/
+    float vx = 155.8844625; 
+    float vy = 90;
+    float theta = 30.0 * 3.14 / 180.0;
+    float dt = 1;                  
+    const int n = 21;
+    float delta_pos_x[n] = {0};
+    float delta_pos_y[n] = {0};
+    float theta_array[n] = {0};
 
-    // cout<<"Ingrese el radio mayor: "; cin>>a;
-    // cout<<"Ingrese el radio menor: "; cin>>b;
-    // cout<<"Ingrese una escala para la conversion: "; cin>> escala;
-    // cout<<"Ingrese la coordenada x de origen: "; cin>>origen_x;
-    // cout<<"Ingrese la coordenada y de origen: "; cin>>origen_y;
+    Draw elipse1(Xd, Yd, a, b);
+    RungeKutta r1(Xd, Yd, vx, vy, theta, a, b, dt, n);
+    Intersection inter(Xd, Yd, a, b);
+
+    float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
+    // float vertices_talud_[6] = {10, 10, 0, 20, 0, 0};
+
+    /*coordenadas del talud*/
+    const int size_coor_talud = 4;
+    float talud[size_coor_talud * 3];
+    unsigned int indices_talud[size_coor_talud * 3];
+
+    /*calculo del punto medio*/
+    float inversa[MAX_DIMENSION][MAX_DIMENSION];
+    float ml, bl;
+    float punto_medio_x, punto_medio_y;
 
     float vertices_talud[] = {
         -0.06f, 0.0f, 0.0f,
@@ -196,25 +128,21 @@ int main()
         0.045f, -0.045f, 0.0f,
         0.9f, -0.045f, 0.0f};
 
-    //float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
-    float vertices_talud_[6] = {10, 10, 0, 20, 0, 0};
+    Superposition super(Xd, Yd, a, b, ml, bl);
+    Speed speed;
 
-    const float escala_x = escala_radio(a, escala);
-    const float escala_y = escala_radio(b, escala);
-
-    float matriz_angulos[MAX_DIMENSION][MAX_DIMENSION] = {
-        {cos(theta_talud), -sin(theta_talud)},
-        {sin(theta_talud), cos(theta_talud)}};
-
-    vertices_elipse(origen_x, origen_y, escala_x, escala_y, inclinacion, salto_angulos_draw, n_triangulos, index_vertices, vertices);
-    indices_elipse(n_triangulos, index_indices, index_indices_value, indices);
-    move(x_array, y_array, vx_array, vy_array, theta_array, delta_pos_x, delta_pos_y, vx, vy, theta, g, t, dt, origen_x, origen_y, a, b, n, w);
-    calcular_inversa(matriz_angulos, 2, inversa);
-    vertices_locales(vertices_resta, vertices_talud_, vertices_locales_talud, Xd, Yd, x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local);
-    mult_matriz_array(inversa, x1_elipse_local, y1_elipse_local, x2_elipse_local, y2_elipse_local, x1_, y1_, x2_, y2_);
-    machine(matriz_angulos, ml, bl, 2, a, b, x1_, y1_, x2_, y2_, Xd, Yd, punto_medio_x, punto_medio_y);
-    superposition(ml, bl, matriz_angulos , vertices_talud_ , a , b, Xd, Yd);
-    velocidad(vertices_talud_, Xd, Yd, punto_medio_x, punto_medio_y , vx, vy , w);
+    elipse1.vertices_elipse(vertices);
+    elipse1.indices_elipse(indices);
+    r1.move(delta_pos_x, delta_pos_y, theta_array);
+    for(int i = 0; i <n  ; i++){
+        cout<<delta_pos_x[i]<<" "<<delta_pos_y[i]<<" "<<theta_array[i]<<endl;
+    }
+    inter.calcular_inversa(inversa);
+    inter.vertices_locales(vertices_talud_);
+    inter.mult_matriz_array(inversa);
+    inter.machine(ml, bl, punto_medio_x, punto_medio_y);
+    super.superposition(ml, bl, vertices_talud_);
+    speed.velocidad(vertices_talud_, punto_medio_x, punto_medio_y);
 
     /******************************************************************************************************************************/
 
@@ -246,7 +174,7 @@ int main()
 
     /******************************************************************************************************/
 
-    uint VBO, VAO, EBO;
+    unsigned int VBO, VAO, EBO;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -272,7 +200,7 @@ int main()
 
     /******************************************************************************************************/
 
-    uint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
@@ -286,7 +214,7 @@ int main()
                   << infoLog << std::endl;
     }
 
-    uint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
@@ -298,7 +226,7 @@ int main()
                   << infoLog << std::endl;
     }
 
-    uint shaderProgram = glCreateProgram();
+    unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
@@ -393,7 +321,7 @@ int main()
         }
         if (pos <= n)
         {
-            transform = glm::translate(transform, glm::vec3(delta_pos_x[pos] / escala, delta_pos_y[pos] / escala, 0.0f));
+            transform = glm::translate(transform, glm::vec3(delta_pos_x[pos], delta_pos_y[pos], 0.0f));
             transform = glm::rotate(transform, (float)glm::radians(theta_array[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
             pos++;
         }
@@ -402,7 +330,7 @@ int main()
 
         glBindVertexArray(VAO);
 
-        glDrawElements(GL_TRIANGLES, size_index, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 39,  GL_UNSIGNED_INT, 0);
 
         glUseProgram(shaderProgram_talud);
         glBindVertexArray(VAO_talud);
@@ -411,7 +339,7 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
     }
 
     glDeleteVertexArrays(1, &VAO);

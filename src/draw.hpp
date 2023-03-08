@@ -5,31 +5,72 @@
 
 const float pi = 3.14;
 
-float radianes(float angulo)
+class Draw
+{
+private:
+    float Xd;
+    float Yd;
+    float a;
+    float b;
+    double inclinacion = 0;
+    int salto_angulos_draw = 30;
+    int n_triangulos = 360 / salto_angulos_draw;
+    int index_vertices = 3;
+    int index_indices = 0;
+    int index_indices_value = 1;
+
+public:
+    Draw();
+    Draw(float Xd, float Yd, float a, float b);
+    float radianes(float angulo);
+    void vertices_elipse(float vertices[]);
+    void indices_elipse(unsigned int indices[]);
+
+    friend class Speed;
+    friend class Superposition;
+};
+
+Draw::Draw()
+{
+    Xd = 0;
+    Yd = 0;
+    a = 0;
+    b = 0;
+};
+
+Draw::Draw(float Xd, float Yd, float a, float b)
+{
+    this->Xd = Xd;
+    this->Yd = Yd;
+    this->a = a;
+    this->b = b;
+}
+
+float Draw::radianes(float angulo)
 {
     return (angulo * pi) / 180;
 }
 
-void vertices_elipse(float origen_x, float origen_y, float escala_x, float escala_y, double inclinacion, const int salto_angulos_draw, int n_triangulos, int index_vertices, float vertices[])
+void Draw::vertices_elipse(float vertices[])
 {
-    vertices[0] = origen_x;
-    vertices[1] = origen_y;
+    vertices[0] = Xd;
+    vertices[1] = Yd;
     vertices[2] = 0.0f;
 
     // llenar array de vertices (x,y,z=0)
     for (int i = 0; i < n_triangulos; i++)
     {
         inclinacion = inclinacion + salto_angulos_draw;
-        vertices[index_vertices] = origen_x + float(escala_x * cos(radianes(inclinacion))); // coordenada X
+        vertices[index_vertices] = Xd + float(a * cos(radianes(inclinacion))); // coordenada X
         index_vertices++;
-        vertices[index_vertices] = origen_y + float(escala_y * sin(radianes(inclinacion))); // coordenada Y
+        vertices[index_vertices] = Yd + float(b * sin(radianes(inclinacion))); // coordenada Y
         index_vertices++;
         vertices[index_vertices] = 0.0f; // coordenada Z
         index_vertices++;
     }
 }
 
-void indices_elipse(int n_triangulos, int index_indices, int index_indices_value, unsigned int indices[])
+void Draw::indices_elipse(unsigned int indices[])
 {
     // llenar el array de indices
     for (int j = 1; j < n_triangulos; j++)
