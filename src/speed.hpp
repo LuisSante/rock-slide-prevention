@@ -12,13 +12,6 @@ private:
 
 public:
 
-    /*Speed(float Xd, float Yd, float vx, float vy){
-        this -> Xd = Xd;
-        this -> Yd = Yd;
-        this -> vx = vx;
-        this -> vy = vy;
-    }*/
-
     Speed() : rk(){}
 
     float distancia_euclidiana(float x1, float y1, float x2, float y2)

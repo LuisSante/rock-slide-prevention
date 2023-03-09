@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <cmath>
-#include "draw.hpp"
 
 using namespace std;
 

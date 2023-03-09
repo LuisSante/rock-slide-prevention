@@ -103,7 +103,7 @@ int main()
 
     Draw elipse1(Xd, Yd, a, b);
     RungeKutta r1(Xd, Yd, vx, vy, theta, a, b, dt, n);
-    Intersection inter(Xd, Yd, a, b);
+    Intersection inter(elipse1);
 
     float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
     // float vertices_talud_[6] = {10, 10, 0, 20, 0, 0};
@@ -128,15 +128,17 @@ int main()
         0.045f, -0.045f, 0.0f,
         0.9f, -0.045f, 0.0f};
 
-    Superposition super(Xd, Yd, a, b, ml, bl);
+    Superposition super(elipse1, ml, bl);
     Speed speed;
 
     elipse1.vertices_elipse(vertices);
     elipse1.indices_elipse(indices);
     r1.move(delta_pos_x, delta_pos_y, theta_array);
+
     for(int i = 0; i <n  ; i++){
         cout<<delta_pos_x[i]<<" "<<delta_pos_y[i]<<" "<<theta_array[i]<<endl;
     }
+
     inter.calcular_inversa(inversa);
     inter.vertices_locales(vertices_talud_);
     inter.mult_matriz_array(inversa);

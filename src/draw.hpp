@@ -26,8 +26,8 @@ public:
     void vertices_elipse(float vertices[]);
     void indices_elipse(unsigned int indices[]);
 
-    friend class Speed;
     friend class Superposition;
+    friend class Intersection;
 };
 
 Draw::Draw()
