@@ -8,6 +8,7 @@
 #include "intersection.hpp"
 #include "superposition.hpp"
 #include "speed.hpp"
+#include "f_normal.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -92,21 +93,20 @@ int main()
     unsigned int indices[39];
 
     /*runge kutta*/
-    float vx = 155.8844625; 
+    float vx = 155.8844625;
     float vy = 90;
     float theta = 30.0 * 3.14 / 180.0;
-    float dt = 1;                  
+    float dt = 1;
     const int n = 21;
     float delta_pos_x[n] = {0};
     float delta_pos_y[n] = {0};
     float theta_array[n] = {0};
 
+    float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
+    // float vertices_talud_[6] = {10, 10, 0, 20, 0, 0};
     Draw elipse1(Xd, Yd, a, b);
     RungeKutta r1(Xd, Yd, vx, vy, theta, a, b, dt, n);
     Intersection inter(elipse1);
-
-    float vertices_talud_[6] = {0.5, 12, 0, 12.5, 1, 0};
-    // float vertices_talud_[6] = {10, 10, 0, 20, 0, 0};
 
     /*coordenadas del talud*/
     const int size_coor_talud = 4;
@@ -135,8 +135,9 @@ int main()
     elipse1.indices_elipse(indices);
     r1.move(delta_pos_x, delta_pos_y, theta_array);
 
-    for(int i = 0; i <n  ; i++){
-        cout<<delta_pos_x[i]<<" "<<delta_pos_y[i]<<" "<<theta_array[i]<<endl;
+    for (int i = 0; i < n; i++)
+    {
+        cout << delta_pos_x[i] << " " << delta_pos_y[i] << " " << theta_array[i] << endl;
     }
 
     inter.calcular_inversa(inversa);
@@ -324,7 +325,7 @@ int main()
         if (pos <= n)
         {
             transform = glm::translate(transform, glm::vec3(delta_pos_x[pos], delta_pos_y[pos], 0.0f));
-            transform = glm::rotate(transform, (float)glm::radians(theta_array[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
+            transform = glm::rotate(transform, (float)glm::radians(-theta_array[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
             pos++;
         }
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
@@ -332,7 +333,7 @@ int main()
 
         glBindVertexArray(VAO);
 
-        glDrawElements(GL_TRIANGLES, 39,  GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 39, GL_UNSIGNED_INT, 0);
 
         glUseProgram(shaderProgram_talud);
         glBindVertexArray(VAO_talud);
@@ -341,7 +342,7 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     glDeleteVertexArrays(1, &VAO);

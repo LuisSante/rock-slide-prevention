@@ -25,7 +25,7 @@ private:
 public:
     Superposition(Draw draw, float ml, float bl)
     {
-        this -> draw = draw;
+        this->draw = draw;
         this->ml = ml;
         this->bl = bl;
         matriz_angulos[0][0] = cos(theta_talud);

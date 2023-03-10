@@ -181,7 +181,7 @@ void RungeKutta::move(float delta_pos_x[], float delta_pos_y[], float theta_arra
     cout<<endl<<endl<<endl<<endl<<endl<<endl<<endl;*/
 
     delta_pos_x[0] = x_array[0];
-    delta_pos_y[0] = y_array[0];
+    delta_pos_y[0] = y_array[0];;
     for (int i = 1; i < n; i++)
     {
         delta_pos_x[i] = (x_array[i] - x_array[i - 1]) / 3500;

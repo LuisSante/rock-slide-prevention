@@ -28,6 +28,7 @@ public:
 
     friend class Superposition;
     friend class Intersection;
+    friend class FuerzaNormal;
 };
 
 Draw::Draw()
