@@ -2,6 +2,9 @@
 #define DRAW_HPP
 
 #include <math.h>
+#include <iostream>
+
+using namespace std;
 
 const float pi = 3.14;
 
@@ -13,7 +16,7 @@ private:
     float a;
     float b;
     double inclinacion = 0;
-    int salto_angulos_draw = 30;
+    int salto_angulos_draw = 20;
     int n_triangulos = 360 / salto_angulos_draw;
     int index_vertices = 3;
     int index_indices = 0;

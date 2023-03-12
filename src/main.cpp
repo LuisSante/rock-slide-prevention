@@ -24,7 +24,6 @@ const unsigned int SCR_HEIGHT = 4000;
 glm::mat4 transform = glm::mat4(1.0f);
 
 // control de velocidad de ejecución
-int pos = 0;
 double lastTime = glfwGetTime();
 double deltaTime = 0.0;
 double desiredFPS = 60.0;
@@ -46,6 +45,17 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+}
+
+void transformVertices(float *vertices, int numVertices, glm::mat4 transform)
+{
+    for (int i = 0; i < numVertices; i += 3)
+    {
+        glm::vec4 transformedVertex = transform * glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
+        vertices[i] = transformedVertex.x;
+        vertices[i + 1] = transformedVertex.y;
+        vertices[i + 2] = transformedVertex.z;
+    }
 }
 
 const char *vertexShaderSource = "#version 330 core\n"
@@ -87,15 +97,15 @@ int main()
     float Xd = origen_x / escala;
     float Yd = origen_y / escala;
 
-    float radio_mayor = 40, radio_menor = 30;
+    float radio_mayor = 300, radio_menor = 200;
     float a = radio_mayor / escala, b = radio_menor / escala;
-    float vertices[39]; // coordenada de origen
-    unsigned int indices[39];
+    float vertices[57]; // coordenada de origen
+    unsigned int indices[54];
 
     /*runge kutta*/
     float vx = 155.8844625;
     float vy = 90;
-    float theta = 30.0 * 3.14 / 180.0;
+    float theta = 0.0 * 3.14 / 180.0;
     float dt = 1;
     const int n = 21;
     float delta_pos_x[n] = {0};
@@ -118,7 +128,7 @@ int main()
     float ml, bl;
     float punto_medio_x, punto_medio_y;
 
-    float vertices_talud[] = {
+    /*float vertices_talud[] = {
         -0.06f, 0.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
 
@@ -126,7 +136,14 @@ int main()
         0.045f, -0.045f, 0.0f,
 
         0.045f, -0.045f, 0.0f,
-        0.9f, -0.045f, 0.0f};
+        0.9f, -0.045f, 0.0f};*/
+
+    float vertices_talud[] = {
+        -1.0f, 0.0f, 0.0,
+        1.0f, 0.0f, 0.0,
+
+        0.0f, -1.0f, 0.0,
+        0.0f, 1.0f, 0.0};
 
     Superposition super(elipse1, ml, bl);
     Speed speed;
@@ -135,7 +152,7 @@ int main()
     elipse1.indices_elipse(indices);
     r1.move(delta_pos_x, delta_pos_y, theta_array);
 
-    for (int i = 0; i < n; i++)
+    /*for (int i = 0; i < n; i++)
     {
         cout << delta_pos_x[i] << " " << delta_pos_y[i] << " " << theta_array[i] << endl;
     }
@@ -145,7 +162,7 @@ int main()
     inter.mult_matriz_array(inversa);
     inter.machine(ml, bl, punto_medio_x, punto_medio_y);
     super.superposition(ml, bl, vertices_talud_);
-    speed.velocidad(vertices_talud_, punto_medio_x, punto_medio_y);
+    speed.velocidad(vertices_talud_, punto_medio_x, punto_medio_y);*/
 
     /******************************************************************************************************************************/
 
@@ -304,28 +321,37 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    int pos = 1;
     while (!glfwWindowShouldClose(window))
     {
-
-        double currentTime = glfwGetTime();
-        deltaTime += currentTime - lastTime;
-        lastTime = currentTime;
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         processInput(window);
 
+        glUseProgram(shaderProgram);
+
         // render
-        if (deltaTime >= frameTime)
+
+        if (pos < n)
         {
-            glUseProgram(shaderProgram);
-            deltaTime -= frameTime;
-        }
-        if (pos <= n)
-        {
-            transform = glm::translate(transform, glm::vec3(delta_pos_x[pos], delta_pos_y[pos], 0.0f));
-            transform = glm::rotate(transform, (float)glm::radians(-theta_array[pos]), glm::vec3(0.0f, 0.0f, 1.0f));
+            cout << "angle: " << theta_array[pos] << endl;
+
+            /*transformVertices(vertices, 57, transform);
+
+            for (int i = 0; i < 57; i += 3)
+            {
+                cout << "Vertex " << i / 3 << ": (" << vertices[i] << ", " << vertices[i + 1] << ", " << vertices[i + 2] << ")" << std::endl;
+            }*/
+
+            float traslate_X = delta_pos_x[pos];
+            float traslate_Y = delta_pos_y[pos];
+            float angle = theta_array[pos] - theta_array[pos -1];
+            transform = glm::translate(glm::mat4(1.0f), glm::vec3(traslate_X, traslate_Y, 0.0f));
+            transform = transform * glm::rotate(glm::mat4(1.0f), (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            traslate_X = 0;
+            traslate_Y = 0;
             pos++;
         }
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
@@ -333,7 +359,7 @@ int main()
 
         glBindVertexArray(VAO);
 
-        glDrawElements(GL_TRIANGLES, 39, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 57, GL_UNSIGNED_INT, 0);
 
         glUseProgram(shaderProgram_talud);
         glBindVertexArray(VAO_talud);
