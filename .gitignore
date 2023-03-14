@@ -1,6 +1,6 @@
 #ingorar carpetas no_open
 *.exe
 *.dll
-lib/
 bin/
+build/
 .vscode/
