@@ -4,6 +4,7 @@
 #include <thread> // para la gestión de hilos
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 
 #include "draw.hpp"
 #include "intersection.hpp"
@@ -106,6 +107,7 @@ const char *fragmentShaderSource_grid = "#version 330 core\n"
                                          "}\n\0";
 int main()
 {
+    std::ofstream output("C:/Users/Usuario/Desktop/hilarios/src/reporte_vertices_transform.txt");
     float escala = 3500;
     float origen_x = 0, origen_y = 0;
     float Xd = origen_x / escala;
@@ -168,10 +170,10 @@ int main()
     elipse1.indices_elipse(indices);
     elipse1.move(delta_pos_x, delta_pos_y, theta_array);
 
-    for (int i = 0; i < n; i++)
+    /*for (int i = 0; i < n; i++)
     {
         cout << delta_pos_x[i] * 3500 << " " << delta_pos_y[i] * 3500<< " " << theta_array[i]<< endl;
-    }
+    }*/
 
     /*super.superposition(ml, bl, vertices_talud);
     speed.velocidad(vertices_talud, punto_medio_x, punto_medio_y);
@@ -411,15 +413,13 @@ int main()
         glm::mat4 transform = glm::mat4(1.0f);
         if (pos < n)
         {
-            cout << "angle: " << theta_array[pos] << endl;
+            output << "angle: " << theta_array[pos] << endl;
 
             float traslate_X = delta_pos_x[pos];
             float traslate_Y = delta_pos_y[pos];
             float angle = theta_array[pos];
             transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
             transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
-            //traslate_X = 0;
-            //traslate_Y = 0;
 
             float outvertices[57];
             memcpy(outvertices, vertices, sizeof(vertices));
@@ -428,7 +428,7 @@ int main()
 
             for (int i = 0; i < 57; i += 3)
             {
-                cout << "Vertex " << i / 3 << ": (" << outvertices[i] * 3500<< ", " << outvertices[i + 1] * 3500<< ", " << outvertices[i + 2] * 3500 << ")" << std::endl;
+                output << "Vertex " << i / 3 << ": (" << outvertices[i] * 3500<< ", " << outvertices[i + 1] * 3500<< ", " << outvertices[i + 2] * 3500 << ")" << std::endl;
             }
 
             pos++;
