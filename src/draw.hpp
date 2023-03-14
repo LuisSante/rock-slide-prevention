@@ -47,9 +47,9 @@ public:
     void move(float delta_pos_x[], float delta_pos_y[], float theta_array[]);
 
     friend class Superposition;
-    friend class Intersection;
-    friend class FuerzaNormal;
-    friend class Speed;
+    friend class PuntoContacto;
+    //friend class FuerzaNormal;
+    friend class Speed_F_Normal;
 };
 
 Draw::Draw()

@@ -1,5 +1,5 @@
-#ifndef INTERSECTION_HPP
-#define INTERSECTION_HPP
+#ifndef PUNTO_CONTACTO_HPP
+#define PUNTO_CONTACTO_HPP
 
 #include <iostream>
 #include <cmath>
@@ -11,7 +11,7 @@ using namespace std;
 
 const int MAX_DIMENSION = 100;
 
-class Intersection
+class PuntoContacto
 {
 private:
     Draw draw;
@@ -21,41 +21,38 @@ private:
     float vertices_resta[6];
     float vertices_locales_talud[6];
 
-    vector<float> medio_locales;
-    vector<float> medio;
-    vector<float> distance_perpendicular;
-
     float inversa[2][2];
-    float ml, bl;
 
 public:
-    Intersection();
-    Intersection(Draw draw);
+    PuntoContacto();
+    PuntoContacto(Draw draw);
     void imprimir_matriz(float matriz[2][2]);
     bool descomposicion_LU(float matriz[2][2], int dimension, float L[2][2], float U[2][2]);
     bool resolver_sistema(float L[2][2], float U[2][2], float b[2], int dimension, float x[2]);
     bool calcular_inversa(float inversa[2][2]);
-    void locales(float vertices_talud_[], float inversa[2][2]);
-    void machine(float vertices_talud[]);
-    void superposition(float vertices_talud[]);
+    vector<float> locales(float vertices_talud_[], float inversa[2][2]);
+    vector<float> machine(float vertices_talud[]);
+    vector<float> superposition(float vertices_talud[]);
 };
 
-Intersection::Intersection()
+PuntoContacto::PuntoContacto()
 {
     for (int i = 0; i < 6; i++)
     {
         vertices_resta[i] = 0;
         vertices_locales_talud[i] = 0;
+        inversa[i][0] = 0;
+        inversa[i][1] = 0;
     }
-
-    ml = 0;
-    bl = 0;
+    /*ml = 0;
+    bl = 0;*/
 }
 
-Intersection::Intersection(Draw draw) : draw(draw){
+PuntoContacto::PuntoContacto(Draw draw) : draw(draw)
+{
 }
 
-void Intersection::imprimir_matriz(float matriz[2][2])
+void PuntoContacto::imprimir_matriz(float matriz[2][2])
 {
     for (int i = 0; i < dimension; i++)
     {
@@ -67,8 +64,8 @@ void Intersection::imprimir_matriz(float matriz[2][2])
     }
 }
 
-bool Intersection::descomposicion_LU(float matriz[2][2], int dimension,
-                                     float L[2][2], float U[2][2])
+bool PuntoContacto::descomposicion_LU(float matriz[2][2], int dimension,
+                                      float L[2][2], float U[2][2])
 {
     // Verificar que la matriz sea cuadrada
     if (dimension <= 0 || dimension > MAX_DIMENSION)
@@ -126,8 +123,8 @@ bool Intersection::descomposicion_LU(float matriz[2][2], int dimension,
     return true;
 }
 
-bool Intersection::resolver_sistema(float L[2][2], float U[2][2],
-                                    float b[2], int dimension, float x[2])
+bool PuntoContacto::resolver_sistema(float L[2][2], float U[2][2],
+                                     float b[2], int dimension, float x[2])
 {
     // Resolver Ly = b usando sustitución hacia adelante
     float y[2] = {};
@@ -165,7 +162,7 @@ bool Intersection::resolver_sistema(float L[2][2], float U[2][2],
     return true;
 }
 
-bool Intersection::calcular_inversa(float inversa[2][2])
+bool PuntoContacto::calcular_inversa(float inversa[2][2])
 {
     // Verificar que la matriz sea cuadrada
     if (dimension <= 0 || dimension > MAX_DIMENSION)
@@ -211,8 +208,10 @@ bool Intersection::calcular_inversa(float inversa[2][2])
     return true;
 }
 
-void Intersection::locales(float vertices_talud_[], float inversa[2][2])
+vector<float> PuntoContacto::locales(float vertices_talud_[], float inversa[2][2])
 {
+    vector<float> medio_locales;
+
     for (int i = 0; i < 6; i += 3)
     {
         vertices_resta[i] = draw.Xd;
@@ -239,15 +238,26 @@ void Intersection::locales(float vertices_talud_[], float inversa[2][2])
     medio_locales.push_back(x2_);
     medio_locales.push_back(y1_);
     medio_locales.push_back(y2_);
+
+    return medio_locales;
 }
 
-void Intersection::machine(float vertices_talud[])
+vector<float> PuntoContacto::machine(float vertices_talud[])
 {
-    calcular_inversa(inversa);
-    locales(vertices_talud, inversa);
+    vector<float> medio;
 
-    ml = (draw.a / draw.b) * ((medio_locales[3] - medio_locales[1]) / (medio_locales[2] - medio_locales[0]));
-    bl = (medio_locales[1] / draw.b) - (ml * (medio_locales[0] / draw.a));
+    if (!calcular_inversa(inversa))
+    {
+        cout << "NO TIENE INVERSA" << endl;
+    }
+
+    vector<float> medio_locales = locales(vertices_talud, inversa);
+
+    float ml = (draw.a / draw.b) * ((medio_locales[3] - medio_locales[1]) / (medio_locales[2] - medio_locales[0]));
+    float bl = (medio_locales[1] / draw.b) - (ml * (medio_locales[0] / draw.a));
+
+    medio.push_back(ml);
+    medio.push_back(bl);
 
     // ecuacion cuadrativa
     double e_a = ((ml * ml) + 1);
@@ -302,16 +312,19 @@ void Intersection::machine(float vertices_talud[])
 
     medio.push_back(punto_medio_x);
     medio.push_back(punto_medio_y);
+
+    return medio;
 }
 
-void Intersection::superposition(float vertices_talud[])
+vector<float> PuntoContacto::superposition(float vertices_talud[])
 {
-    machine(vertices_talud);
-    float pA1 = (1 / (sqrt(1 + (ml * ml))));
-    float pA2 = -(1 / (sqrt(1 + (ml * ml))));
+    vector<float> distance_perpendicular;
+    vector<float> point_middle = machine(vertices_talud);
+    float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
+    float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
 
-    float sA1 = -ml * pA1;
-    float sA2 = -ml * pA2;
+    float sA1 = -point_middle[0] * pA1;
+    float sA2 = -point_middle[0] * pA2;
 
     float xA1 = sA1 * draw.a;
     float yA1 = pA1 * draw.b;
@@ -337,6 +350,7 @@ void Intersection::superposition(float vertices_talud[])
     distance_perpendicular.push_back(per_1);
     distance_perpendicular.push_back(per_2);
 
+    return distance_perpendicular;
 }
 
 #endif

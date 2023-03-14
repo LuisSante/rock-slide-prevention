@@ -7,9 +7,9 @@
 #include <fstream>
 
 #include "draw.hpp"
-#include "intersection.hpp"
-#include "speed.hpp"
-#include "f_normal.hpp"
+#include "punto_contacto.hpp"
+#include "speed_f_normal.hpp"
+
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -113,7 +113,7 @@ int main()
     float Xd = origen_x / escala;
     float Yd = origen_y / escala;
 
-    float radio_mayor = 200, radio_menor = 150;
+    float radio_mayor = 20, radio_menor = 15;
     float a = radio_mayor / escala, b = radio_menor / escala;
     float vertices[57]; // coordenada de origen
     unsigned int indices[54];
@@ -130,7 +130,7 @@ int main()
 
     float vertices_talud[6] = {0.5, 12, 0, 12.5, 1, 0};
     Draw elipse1(Xd, Yd, a , b, vx, vy, theta, dt, n);
-    Intersection inter(elipse1);
+    PuntoContacto inter(elipse1);
 
     /*coordenadas del talud*/
     const int size_coor_grid = 4;
