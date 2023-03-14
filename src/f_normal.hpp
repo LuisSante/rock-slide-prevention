@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include <math.h>
+#include <vector>
+
 #include "draw.hpp"
+#include "speed.hpp"
 
 using namespace std;
 
@@ -26,11 +29,12 @@ private:
 
 public:
     FuerzaNormal();
-    FuerzaNormal(Draw draw);
+    // FuerzaNormal(Draw draw);
     void radio_equivalente();
     void young_module();
     void equivalent_shear_modulus();
-    void fuerza();
+    float fuerza();
+    void modulo();
 };
 
 FuerzaNormal::FuerzaNormal()
@@ -40,8 +44,6 @@ FuerzaNormal::FuerzaNormal()
     G_star = 0;
     gama = 0;
 }
-
-
 
 void FuerzaNormal::radio_equivalente()
 {
@@ -65,9 +67,15 @@ void FuerzaNormal::equivalent_shear_modulus()
     G_star = G_star * 98.0665;
 }
 
-void FuerzaNormal::fuerza()
+float FuerzaNormal::fuerza()
 {
-    gama = -log(en_coe_restitution)/(sqrt((PI_*PI_) + (log(en_coe_restitution) * log(en_coe_restitution))));
+    gama = -log(en_coe_restitution) / (sqrt((PI_ * PI_) + (log(en_coe_restitution) * log(en_coe_restitution))));
+    return gama;
+}
+
+void FuerzaNormal::modulo()
+{   
+    
 }
 
 #endif
