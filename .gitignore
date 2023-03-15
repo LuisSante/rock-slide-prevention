@@ -1,6 +1,8 @@
 #ingorar carpetas no_open
 *.exe
 *.dll
+*.txt
+*.ipynb
 bin/
-build/
 .vscode/
+build/
