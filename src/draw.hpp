@@ -2,12 +2,12 @@
 #define DRAW_HPP
 
 #include <math.h>
+#include <vector>
 #include <iostream>
 
 using namespace std;
 
 const float pi = 3.14;
-const int size_ = 21;
 
 class Draw
 {
@@ -16,7 +16,7 @@ private:
     float Yd;
     float a;
     float b;
-    double inclinacion = 0;
+    double inclinacion = 0.0f;
     int salto_angulos_draw = 20;
     int n_triangulos = 360 / salto_angulos_draw;
     int index_vertices = 3;
@@ -24,31 +24,35 @@ private:
     int index_indices_value = 1;
 
     // RK
-    float w = 0.2;
-    float t = 0.0f;
-    float vx;
-    float vy;
-    float theta;
-    const float g = 9.81;
-    float dt;
-    int n;
-    float x_array[size_];
-    float y_array[size_];
-    float vx_array[size_];
-    float vy_array[size_];
+    float vx0;
+    float vy0;
+    float theta0;
+    float h = 1;
+    float w = 0.2f;
+    float t0 = 0.0f;
+    float tf = 20.0f;
+    float masa = 120.0f;
+    float fuerza = 0.0f;
+    const float g = 9.81f;
+    float I = masa * (a * b )* (a * a + b * b) / 4.0;
 
 public:
+    int n = (tf - t0) / h;
+
     Draw();
-    Draw(float Xd, float Yd, float a, float b, float vx, float vy, float theta, float dt, int n);
+    Draw(float Xd, float Yd, float a, float b, float vx, float vy, float theta);
     float radianes(float angulo);
     void vertices_elipse(float vertices[]);
     void indices_elipse(unsigned int indices[]);
-    void movimiento_proyectil(float t, float Xd, float Yd, float &vx, float &vy, float &theta);
-    void move(float delta_pos_x[], float delta_pos_y[], float theta_array[]);
+    /*void movimiento_proyectil(float t, float Xd, float Yd, float &vx, float &vy, float &theta);
+    void move(float delta_pos_x[], float delta_pos_y[], float theta_array[]);*/
+
+    double Fx();
+    double Fy();
+    void runge_kutta(vector<float>& posiciones_x , vector<float>& posiciones_y, vector<float>& velocidades_x , vector<float>& velocidades_y , vector<float>& angulos);
 
     friend class Superposition;
     friend class PuntoContacto;
-    //friend class FuerzaNormal;
     friend class Speed_F_Normal;
 };
 
@@ -59,28 +63,20 @@ Draw::Draw()
     a = 0;
     b = 0;
 
-    vx = 0;
-    vy = 0;
-    theta = 0;
-    dt = 0;
-    n = 0;
+    vx0 = 0;
+    vy0 = 0;
+    theta0 = 0;
 };
 
-Draw::Draw(float Xd, float Yd, float a, float b, float vx, float vy, float theta, float dt, int n)
+Draw::Draw(float Xd, float Yd, float a, float b, float vx0, float vy0, float theta0)
 {
     this->Xd = Xd;
     this->Yd = Yd;
     this->a = a;
     this->b = b;
-    this->vx = vx;
-    this->vy = vy;
-    this->theta = theta;
-    this->dt = dt;
-    this->n = n;
-    x_array[0] = Xd;
-    y_array[0] = Yd;
-    vx_array[0] = vx;
-    vy_array[0] = vy;
+    this->vx0 = vx0;
+    this->vy0 = vy0;
+    this->theta0 = theta0;
 }
 
 float Draw::radianes(float angulo)
@@ -127,120 +123,69 @@ void Draw::indices_elipse(unsigned int indices[])
     indices[index_indices] = 1;
 }
 
-void Draw::movimiento_proyectil(float t, float Xd, float Yd, float &vx, float &vy, float &theta)
+// Funciones para calcular las fuerzas en x e y
+double Draw::Fx()
 {
-    // Calcular las aceleraciones en los ejes x e y
-    float ax = 0.0;
-    float ay = -g;
-
-    // Calcular la fuerza de resistencia del aire
-    float r_aire = 0.000; // coeficiente de resistencia del aire
-    float Fx = -r_aire * vx * std::sqrt(vx * vx + vy * vy);
-    float Fy = -r_aire * vy * std::sqrt(vx * vx + vy * vy);
-
-    // Calcular el momento resultante en el plano xy
-    float I = (0.25 * 3.14) * (a * b) * (a * a + b * b); // momento de inercia del proyectil (en kg*m^2)
-    float M = 0;                                         // momento resultante
-
-    // Actualizar la velocidad en el eje x
-    float k1_vx = ax + Fx / I;
-    float k2_vx = ax + Fx / I;
-    float k3_vx = ax + Fx / I;
-    float k4_vx = ax + Fx / I;
-    vx += (k1_vx + 2.0 * k2_vx + 2.0 * k3_vx + k4_vx) / 6.0;
-
-    // Actualizar la velocidad en el eje y
-    float k1_vy = ay + Fy / I;
-    float k2_vy = ay + Fy / I;
-    float k3_vy = ay + Fy / I;
-    float k4_vy = ay + Fy / I;
-    vy += (k1_vy + 2.0 * k2_vy + 2.0 * k3_vy + k4_vy) / 6.0;
-
-    // Actualizar la posición en el eje x
-    float k1_x = vx;
-    float k2_x = vx + k1_vx / 2.0;
-    float k3_x = vx + k2_vx / 2.0;
-    float k4_x = vx + k3_vx;
-    Xd += (k1_x + 2.0 * k2_x + 2.0 * k3_x + k4_x) / 6.0;
-
-    // Actualizar la posición en el eje y
-    float k1_y = vy;
-    float k2_y = vy + k1_vy / 2.0;
-    float k3_y = vy + k2_vy / 2.0;
-    float k4_y = vy + k3_vy;
-    Yd += (k1_y + 2.0 * k2_y + 2.0 * k3_y + k4_y) / 6.0;
-
-    // Actualizar el ángulo de giro del proyectil
-    // suma W ya que es ek resultado del primer RK
-    float k1_theta = w;
-    float k2_theta = w + M / I;
-    float k3_theta = w + M / I;
-    float k4_theta = w + M / I;
-    theta += (k1_theta + 2.0 * k2_theta + 2.0 * k3_theta + k4_theta) / 6.0;
+    return 0; // Agregue su función de fuerza en x aquí
 }
 
-void Draw::move(float delta_pos_x[], float delta_pos_y[], float theta_array[])
+double Draw::Fy()
 {
-    theta_array[0] = theta;
-    for (int i = 1; i < n; i++)
+    return -masa * g; // Agregue su función de fuerza en y aquí
+}
+
+// Función para implementar el método de Runge-Kutta de cuarto orden
+void Draw::runge_kutta(vector<float>& posiciones_x , vector<float>& posiciones_y, vector<float>& velocidades_x , vector<float>& velocidades_y , vector<float>& angulos)
+{
+    double x = Xd, y = Yd, vx = vx0, vy = vy0, theta = theta0;
+    double k1x, k2x, k3x, k4x, k1y, k2y, k3y, k4y, k1vx, k2vx, k3vx, k4vx, k1vy, k2vy, k3vy, k4vy;
+    double k1omega, k2omega, k3omega, k4omega, k1theta, k2theta, k3theta, k4theta;
+    double MG = 0;
+    double derivada_w = MG / I;
+
+    for (int i = 0; t0 + i * h <= tf; i++)
     {
-        // Calcular los valores de k1, k2, k3 y k4 para la actualización de las variables
-        float k1_x, k2_x, k3_x, k4_x, k1_y, k2_y, k3_y, k4_y;
-        float k1_vx, k2_vx, k3_vx, k4_vx, k1_vy, k2_vy, k3_vy, k4_vy;
-        float k1_theta, k2_theta, k3_theta, k4_theta;
+        double t = t0 + i * h;
+        //cout<<"T: "<<t<<endl;
+        posiciones_x.push_back(x);
+        posiciones_y.push_back(y);
+        velocidades_x.push_back(vx);
+        velocidades_y.push_back(vy);
+        angulos.push_back(theta);
 
-        k1_x = vx;
-        k1_vx = 0.0;
-        k1_y = vy;
-        k1_vy = 0.0;
-        k1_theta = 0.0;
-        movimiento_proyectil(t, Xd, Yd, k1_vx, k1_vy, k1_theta);
-        k2_x = vx + k1_vx * dt / 2.0;
-        k2_vx = 0.0;
-        k2_y = vy + k1_vy * dt / 2.0;
-        k2_vy = 0.0;
-        k2_theta = 0.0;
-        movimiento_proyectil(t + dt / 2.0, Xd + k1_x * dt / 2.0, Yd + k1_y * dt / 2.0, k2_vx, k2_vy, k2_theta);
+        k1vx = Fx();
+        k1vy = Fy() / masa;
+        k1x = vx;
+        k1y = vy;
+        k1omega = derivada_w;
+        k1theta = w + derivada_w * t;
 
-        k3_x = vx + k2_vx * dt / 2.0;
-        k3_vx = 0.0;
-        k3_y = vy + k2_vy * dt / 2.0;
-        k3_vy = 0.0;
-        k3_theta = 0.0;
-        movimiento_proyectil(t + dt / 2.0, Xd + k2_x * dt / 2.0, Yd + k2_y * dt / 2.0, k3_vx, k3_vy, k3_theta);
-        k4_x = vx + k3_vx * dt;
-        k4_vx = 0.0;
-        k4_y = vy + k3_vy * dt;
-        k4_vy = 0.0;
-        k4_theta = 0.0;
-        movimiento_proyectil(t + dt, Xd + k3_x * dt, Yd + k3_y * dt, k4_vx, k4_vy, k4_theta);
+        k2vx = Fx();
+        k2vy = Fy() / masa;
+        k2x = vx + k1vx * h / 2.0;
+        k2y = vy + k1vy * h / 2.0;
+        k2omega = derivada_w;
+        k2theta = w + derivada_w * (t + 0.5 * h);
 
-        // Actualizar las variables con el método Runge-Kutta de cuarto orden
-        Xd += (k1_x + 2.0 * k2_x + 2.0 * k3_x + k4_x) / 6.0;
-        vx += (k1_vx + 2.0 * k2_vx + 2.0 * k3_vx + k4_vx) / 6.0;
-        Yd += (k1_y + 2.0 * k2_y + 2.0 * k3_y + k4_y) / 6.0;
-        vy += (k1_vy + 2.0 * k2_vy + 2.0 * k3_vy + k4_vy) / 6.0;
-        theta += (k1_theta + 2.0 * k2_theta + 2.0 * k3_theta + k4_theta) / 6.0;
+        k3vx = Fx();
+        k3vy = Fy() / masa;
+        k3x = vx + k2vx * h / 2.0;
+        k3y = vy + k2vy * h / 2.0;
+        k3omega = derivada_w;
+        k3theta = w + derivada_w * (t + 0.5 * h);
 
-        // Almacenar los valores de las posiciones y velocidades en los arrays correspondientes
-        x_array[i] = Xd;
-        vx_array[i] = vx;
-        y_array[i] = Yd;
-        vy_array[i] = vy;
-        theta_array[i] = theta;
+        k4vx = Fx();
+        k4vy = Fy() / masa;
+        k4x = vx + k3vx * h;
+        k4y = vy + k3vy * h;
+        k4omega = derivada_w;
+        k4theta = w + derivada_w * (t + h);
 
-        // Actualizar el tiempo
-        t += dt;
-    }    
-
-
-    delta_pos_x[0] = x_array[0];
-    delta_pos_y[0] = y_array[0];
-    
-    for (int i = 1; i < n; i++)
-    {
-        delta_pos_x[i] = (x_array[i]) / 3500;
-        delta_pos_y[i] = (y_array[i]) / 3500;
+        x += (h / 6.0) * (k1x + 2.0 * k2x + 2.0 * k3x + k4x);
+        y += (h / 6.0) * (k1y + 2.0 * k2y + 2.0 * k3y + k4y);
+        vx += (h / 6.0) * (k1vx + 2.0 * k2vx + 2.0 * k3vx + k4vx);
+        vy += (h / 6.0) * (k1vy + 2.0 * k2vy + 2.0 * k3vy + k4vy);
+        theta += (h / 6.0) * (k1theta + 2.0 * k2theta + 2.0 * k3theta + k4theta);
     }
 }
 

@@ -5,11 +5,11 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <string>
 
 #include "draw.hpp"
 #include "punto_contacto.hpp"
 #include "speed_f_normal.hpp"
-
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -77,7 +77,6 @@ const char *fragmentShaderSource = "#version 330 core\n"
                                    "   FragColor = vec4(ourColor, 1.0f);\n"
                                    "}\n\0";
 
-                    
 const char *vertexShaderSource_talud = "#version 330 core\n"
                                        "layout (location = 0) in vec3 aPos;\n"
                                        "void main()\n"
@@ -93,21 +92,22 @@ const char *fragmentShaderSource_talud = "#version 330 core\n"
                                          "}\n\0";
 
 const char *vertexShaderSource_grid = "#version 330 core\n"
-                                       "layout (location = 0) in vec3 aPos;\n"
-                                       "void main()\n"
-                                       "{\n"
-                                       "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                       "}\0";
+                                      "layout (location = 0) in vec3 aPos;\n"
+                                      "void main()\n"
+                                      "{\n"
+                                      "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+                                      "}\0";
 
 const char *fragmentShaderSource_grid = "#version 330 core\n"
-                                         "out vec4 FragColor;\n"
-                                         "void main()\n"
-                                         "{\n"
-                                         "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-                                         "}\n\0";
+                                        "out vec4 FragColor;\n"
+                                        "void main()\n"
+                                        "{\n"
+                                        "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+                                        "}\n\0";
 int main()
 {
-    std::ofstream output("C:/Users/Usuario/Desktop/hilarios/src/reporte_vertices_transform.txt");
+    ofstream output("C:/Users/Usuario/Desktop/hilarios/src/report.txt");
+
     float escala = 3500;
     float origen_x = 0, origen_y = 0;
     float Xd = origen_x / escala;
@@ -122,63 +122,50 @@ int main()
     float vx = 155.8844625;
     float vy = 90;
     float theta = 0.0 * 3.14 / 180.0;
-    float dt = 0.01;
-    const int n = 21;
-    float delta_pos_x[n] = {0};
-    float delta_pos_y[n] = {0};
-    float theta_array[n] = {0};
 
     float vertices_talud[6] = {0.5, 12, 0, 12.5, 1, 0};
-    Draw elipse1(Xd, Yd, a , b, vx, vy, theta, dt, n);
-    PuntoContacto inter(elipse1);
+    Draw elipse(Xd, Yd, a, b, vx, vy, theta);
+    PuntoContacto inter(elipse);
 
     /*coordenadas del talud*/
     const int size_coor_grid = 4;
     float talud[size_coor_grid * 3];
     unsigned int indices_grid[size_coor_grid * 3];
 
-    /*calculo del punto medio*/
-    /*float inversa[MAX_DIMENSION][MAX_DIMENSION];
-    float ml, bl;
-    float punto_medio_x, punto_medio_y;*/
-
     float vertices_grid[] = {
-        -1.0f, 0.0f, 0.0,
-        1.0f, 0.0f, 0.0,
+        -1.0f,0.0f,0.0,1.0f,0.0f,0.0,
 
-        -1.0f, 0.5f, 0.0,
-        1.0f, 0.5f, 0.0,
+        -1.0f,0.5f,0.0,1.0f,0.5f,0.0,
 
-        0.5f, -1.0f, 0.0,
-        0.5f, 1.0f, 0.0,
+        0.5f,-1.0f,0.0,0.5f,1.0f,0.0,
 
-        0.0f, -1.0f, 0.0,
-        0.0f, 1.0f, 0.0,
-        
-        -0.5f, -1.0f, 0.0,
-        -0.5f, 1.0f, 0.0,
+        0.0f,-1.0f,0.0,0.0f,1.0f,0.0,
 
-        -1.0f, -0.5f, 0.0,
-        1.0f, -0.5f, 0.0,};
+        -0.5f,-1.0f,0.0,-0.5f,1.0f,0.0,
 
+        -1.0f,-0.5f,0.0,1.0f,-0.5f,0.0
+    };
 
-    /*Superposition super(elipse1, ml, bl);
-    Speed speed;
-    FuerzaNormal fn;*/
+    elipse.vertices_elipse(vertices);
+    elipse.indices_elipse(indices);
 
-    elipse1.vertices_elipse(vertices);
-    elipse1.indices_elipse(indices);
-    elipse1.move(delta_pos_x, delta_pos_y, theta_array);
+    /*vector<float> vx_array = elipse.velocidad_x();
+    vector<float> vy_array = elipse.velocidad_y();
+    vector<float> x_array = elipse.posiciones_x();
+    vector<float> y_array = elipse.posiciones_y();
+    vector<float> theta_array = elipse.angulo_giro();
 
-    /*for (int i = 0; i < n; i++)
-    {
-        cout << delta_pos_x[i] * 3500 << " " << delta_pos_y[i] * 3500<< " " << theta_array[i]<< endl;
-    }*/
+    int n = vx_array.size();*/
 
-    /*super.superposition(ml, bl, vertices_talud);
-    speed.velocidad(vertices_talud, punto_medio_x, punto_medio_y);
+    vector<float> x_array;
+    vector<float> y_array;
+    vector<float> vx_array;
+    vector<float> vy_array;
+    vector<float> theta_array;
 
-    fn.modulo();*/
+    elipse.runge_kutta(x_array, y_array , vx_array , vy_array , theta_array);
+
+    int n = vx_array.size();
 
     /******************************************************************************************************************************/
 
@@ -380,7 +367,6 @@ int main()
     glDeleteShader(vertexShader_talud);
     glDeleteShader(fragmentShader_talud);
 
-
     unsigned int VBO_talud, VAO_talud;
     glGenVertexArrays(1, &VAO_talud);
     glGenBuffers(1, &VBO_talud);
@@ -415,8 +401,8 @@ int main()
         {
             output << "angle: " << theta_array[pos] << endl;
 
-            float traslate_X = delta_pos_x[pos];
-            float traslate_Y = delta_pos_y[pos];
+            float traslate_X = x_array[pos] / escala;
+            float traslate_Y = y_array[pos] / escala;
             float angle = theta_array[pos];
             transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
             transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -428,16 +414,17 @@ int main()
 
             for (int i = 0; i < 57; i += 3)
             {
-                output << "Vertex " << i / 3 << ": (" << outvertices[i] * 3500<< ", " << outvertices[i + 1] * 3500<< ", " << outvertices[i + 2] * 3500 << ")" << std::endl;
+                output << "Vertex " << i / 3 << ": (" << outvertices[i] * 3500 << ", " << outvertices[i + 1] * 3500 << ", " << outvertices[i + 2] * 3500 << ")" << std::endl;
             }
 
             pos++;
         }
 
-        else{
-            float traslate_X = delta_pos_x[n-1];
-            float traslate_Y = delta_pos_y[n-1];
-            float angle = theta_array[n-1];
+        else
+        {
+            float traslate_X = x_array[n - 1] / escala;
+            float traslate_Y = y_array[n - 1] / escala;
+            float angle = theta_array[n - 1];
             transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
             transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
         }

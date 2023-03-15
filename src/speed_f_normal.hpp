@@ -45,10 +45,10 @@ public:
     float radio_equivalente();
     float young_module();
     float equivalent_shear_modulus();
-    float fuerza_normal(float vertices_talud[]);
+    vector<float> fuerza_normal(float vertices_talud[]);
     float coeficiente_friccion(float vertices_talud[]);
-    float fuerza_tangencial(float vertices_talud[]);
-    float mu_FN(float vertices_talud[]);
+    vector<float> fuerza_tangencial(float vertices_talud[]);
+    float momentos(float vertices_talud[]);
 };
 
 float Speed_F_Normal::distancia_euclidiana(float x1, float y1, float x2, float y2)
@@ -94,9 +94,9 @@ vector<float> Speed_F_Normal::velocidad_vec_contacto(float vertices_talud_[])
     vector<float> vectores_rc_ = vectores_rc(vertices_talud_);
     vector<float> vectores_contacto = {/*vc_i , vc_j , w_i , w_j , e_i , e_j*/};
 
-    float vc_i = draw.vx - (draw.w * vectores_rc_[1]);
+    float vc_i = draw.vx0 - (draw.w * vectores_rc_[1]);
     vectores_contacto.push_back(vc_i);
-    float vc_j = draw.vy + (draw.w * vectores_rc_[0]);
+    float vc_j = draw.vy0 + (draw.w * vectores_rc_[0]);
     vectores_contacto.push_back(vc_j);
 
     // vectores unitarios
@@ -194,8 +194,9 @@ float Speed_F_Normal::gamma_t()
     return gama;
 }
 
-float Speed_F_Normal::fuerza_normal(float vertices_talud[])
+vector<float> Speed_F_Normal::fuerza_normal(float vertices_talud[])
 {
+    vector<float> fuerza_n;
     vector<float> abs_ = contact.superposition(vertices_talud);
     float module = abs_[1];
     if (abs_[1] < 0)
@@ -226,16 +227,20 @@ float Speed_F_Normal::fuerza_normal(float vertices_talud[])
     float FN_j = kn_module_j + cn_sigma_n_j;
     float FN = sqrt((FN_i * FN_i) + (FN_j * FN_j));
 
-    return FN;
+    fuerza_n.push_back(FN_i);
+    fuerza_n.push_back(FN_j);
+    fuerza_n.push_back(FN);
+
+    return fuerza_n;
 }
 
 float Speed_F_Normal::coeficiente_friccion(float vertices_talud[])
 {
-    float FN = fuerza_normal(vertices_talud);
-    return mu * FN;
+    vector<float> FN = fuerza_normal(vertices_talud);
+    return mu * FN[2];
 }
 
-float Speed_F_Normal::fuerza_tangencial(float vertices_talud[])
+vector<float> Speed_F_Normal::fuerza_tangencial(float vertices_talud[])
 {
     vector<float> abs_ = contact.superposition(vertices_talud);
     float module = abs_[1];
@@ -243,7 +248,12 @@ float Speed_F_Normal::fuerza_tangencial(float vertices_talud[])
         module = -module;
 
     vector<float> vector_velocity = velocidad(vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
-    
+    vector<float> w = velocidad_vec_contacto(vertices_talud);
+    float mu_fn = coeficiente_friccion(vertices_talud);
+
+    float mu_fn_i = mu_fn * vector_velocity[0];
+    float mu_fn_j = mu_fn * vector_velocity[0];
+
     float G_star = equivalent_shear_modulus();
     float r_star = radio_equivalente();
     float kt = 8 * G_star * sqrt(r_star * module);
@@ -253,6 +263,55 @@ float Speed_F_Normal::fuerza_tangencial(float vertices_talud[])
     float F_tangecial_amortiguadora_i = F_tangecial_amortiguadora * vector_velocity[0];
     float F_tangecial_amortiguadora_j = F_tangecial_amortiguadora * vector_velocity[1];
 
-    
+    float step_back_i = 0;
+    float step_back_j = 0;
+
+    float k_i_t_deltatime_i = kt * draw.h * vector_velocity[0];
+    float k_i_t_deltatime_j = kt * draw.h * vector_velocity[1];
+
+    float actual_fuerza_tangencial_resorte_i = k_i_t_deltatime_i + step_back_i;
+    float actual_fuerza_tangencial_resorte_j = k_i_t_deltatime_j + step_back_j;
+
+    actual_fuerza_tangencial_resorte_i = -actual_fuerza_tangencial_resorte_i;
+    actual_fuerza_tangencial_resorte_j = -actual_fuerza_tangencial_resorte_j;
+    F_tangecial_amortiguadora_i = -F_tangecial_amortiguadora_i;
+    F_tangecial_amortiguadora_j = -F_tangecial_amortiguadora_j;
+
+    float Ft_i = actual_fuerza_tangencial_resorte_i + F_tangecial_amortiguadora_i;
+    float Ft_j = actual_fuerza_tangencial_resorte_j + F_tangecial_amortiguadora_j;
+
+    float Ft = sqrt((Ft_i * Ft_i) + (Ft_j * Ft_j));
+
+    float rpta;
+    vector<float> vector_rpta;
+
+    if (Ft >= mu_fn)
+    {
+        rpta = mu_fn;
+        vector_rpta.push_back(mu_fn_i);
+        vector_rpta.push_back(mu_fn_j);
+    }
+    else
+    {
+        rpta = Ft;
+        vector_rpta.push_back(Ft_i);
+        vector_rpta.push_back(Ft_j);
+    }
+
+    return vector_rpta;
+}
+
+float Speed_F_Normal::momentos(float vertices_talud[])
+{
+    vector<float> rc = vectores_rc(vertices_talud);
+    vector<float> f_n = fuerza_normal(vertices_talud);
+    vector<float> f_t = fuerza_tangencial(vertices_talud);
+
+    float f_total_i = f_n[0] + f_t[0];
+    float f_total_j = f_n[1] + f_t[1];
+
+    float M_G = (rc[0] * f_total_j) + (rc[1] * f_total_i);
+
+    return M_G;
 }
 #endif
