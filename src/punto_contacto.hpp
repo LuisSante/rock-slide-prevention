@@ -41,8 +41,6 @@ PuntoContacto::PuntoContacto()
     {
         vertices_resta[i] = 0;
         vertices_locales_talud[i] = 0;
-        inversa[i][0] = 0;
-        inversa[i][1] = 0;
     }
     /*ml = 0;
     bl = 0;*/
@@ -50,6 +48,11 @@ PuntoContacto::PuntoContacto()
 
 PuntoContacto::PuntoContacto(Draw draw) : draw(draw)
 {
+    for (int i = 0; i < 6; i++)
+    {
+        vertices_resta[i] = 0;
+        vertices_locales_talud[i] = 0;
+    }
 }
 
 void PuntoContacto::imprimir_matriz(float matriz[2][2])
@@ -235,9 +238,17 @@ vector<float> PuntoContacto::locales(float vertices_talud_[], float inversa[2][2
     float y2_ = (inversa[1][0] * x2_elipse_local) + (inversa[1][1] * y2_elipse_local);
 
     medio_locales.push_back(x1_);
-    medio_locales.push_back(x2_);
     medio_locales.push_back(y1_);
+    medio_locales.push_back(x2_);
     medio_locales.push_back(y2_);
+
+    /*cout << "FUNCION LOCALES" << endl;
+    for (int i = 0; i < medio_locales.size(); i++)
+    {
+        cout << medio_locales[i] << " ";
+    }
+    cout << endl
+         << endl;*/
 
     return medio_locales;
 }
@@ -267,8 +278,8 @@ vector<float> PuntoContacto::machine(float vertices_talud[])
     // raices
     double discriminante = e_b * e_b - 4 * e_a * e_c;
     double raizDiscriminante = sqrt(abs(discriminante));
-    double s1, s2;
-    float parteReal, parteImaginaria;
+    double s1 = 0, s2 = 0;
+    float parteReal = 0 , parteImaginaria = 0;
     if (discriminante > 0)
     {
         s1 = (-e_b + raizDiscriminante) / (2 * e_a);
@@ -286,8 +297,8 @@ vector<float> PuntoContacto::machine(float vertices_talud[])
         cout << "No hay interseccion" << endl;
     }
 
-    double p1, p2;
-    double _x_1, _y_1, _x_2, _y_2;
+    double p1 = 0, p2 = 0;
+    double _x_1 = 0, _y_1 = 0, _x_2 = 0, _y_2 = 0;
     p1 = (ml * s1) + bl;
     p2 = (ml * s2) + bl;
 
@@ -312,6 +323,14 @@ vector<float> PuntoContacto::machine(float vertices_talud[])
 
     medio.push_back(punto_medio_x);
     medio.push_back(punto_medio_y);
+
+    /*cout << "FUNCION MACHINE PARA SACAR LOS PUNTO MEDIOS" << endl;
+    for (int i = 0; i < medio.size(); i++)
+    {
+        cout << medio[i] << " ";
+    }
+    cout << endl
+         << endl;*/
 
     return medio;
 }
@@ -349,6 +368,14 @@ vector<float> PuntoContacto::superposition(float vertices_talud[])
 
     distance_perpendicular.push_back(per_1);
     distance_perpendicular.push_back(per_2);
+
+    /*cout << "FUNCION PARA LA SUPERPOSICION: DISTANCIAS PERPENDICULARES" << endl;
+    for (int i = 0; i < distance_perpendicular.size(); i++)
+    {
+        cout << distance_perpendicular[i] << " ";
+    }
+    cout << endl
+         << endl;*/
 
     return distance_perpendicular;
 }

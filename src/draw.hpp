@@ -27,8 +27,8 @@ private:
     float vx0;
     float vy0;
     float theta0;
-    float h = 1;
-    float w = 0.2f;
+    float h = 0.000001;
+    float w = 0.5f;
     float t0 = 0.0f;
     float tf = 20.0f;
     float masa = 120.0f;

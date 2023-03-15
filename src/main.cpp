@@ -108,24 +108,25 @@ int main()
 {
     ofstream output("C:/Users/Usuario/Desktop/hilarios/src/report.txt");
 
-    float escala = 3500;
-    float origen_x = 0, origen_y = 0;
+    float escala = 1;
+    float origen_x = 8.045, origen_y = 8.045;
     float Xd = origen_x / escala;
     float Yd = origen_y / escala;
 
-    float radio_mayor = 20, radio_menor = 15;
+    float radio_mayor = 2.5, radio_menor = 1.5;
     float a = radio_mayor / escala, b = radio_menor / escala;
     float vertices[57]; // coordenada de origen
     unsigned int indices[54];
 
     /*runge kutta*/
-    float vx = 155.8844625;
-    float vy = 90;
+    float vx = 2.0f;
+    float vy = -2.0f;
     float theta = 0.0 * 3.14 / 180.0;
 
     float vertices_talud[6] = {0.5, 12, 0, 12.5, 1, 0};
     Draw elipse(Xd, Yd, a, b, vx, vy, theta);
     PuntoContacto inter(elipse);
+    Speed_F_Normal speed(elipse);
 
     /*coordenadas del talud*/
     const int size_coor_grid = 4;
@@ -149,14 +150,6 @@ int main()
     elipse.vertices_elipse(vertices);
     elipse.indices_elipse(indices);
 
-    /*vector<float> vx_array = elipse.velocidad_x();
-    vector<float> vy_array = elipse.velocidad_y();
-    vector<float> x_array = elipse.posiciones_x();
-    vector<float> y_array = elipse.posiciones_y();
-    vector<float> theta_array = elipse.angulo_giro();
-
-    int n = vx_array.size();*/
-
     vector<float> x_array;
     vector<float> y_array;
     vector<float> vx_array;
@@ -165,7 +158,18 @@ int main()
 
     elipse.runge_kutta(x_array, y_array , vx_array , vy_array , theta_array);
 
+    inter.superposition(vertices_talud);
+    cout<<endl<<endl;
+    speed.momentos(vertices_talud);
+
     int n = vx_array.size();
+    /*for (int i = 0; i < n; i++)
+    {
+        cout<<x_array[i]<<" "<<y_array[i]<<" "<<vx_array[i]<<" "<<vy_array[i]<<" "<<theta_array[i]<<endl;
+    }*/
+
+
+
 
     /******************************************************************************************************************************/
 
@@ -458,6 +462,6 @@ int main()
     glDeleteProgram(shaderProgram_grid);
 
     glfwTerminate();
-
+//
     return 0;
 }
