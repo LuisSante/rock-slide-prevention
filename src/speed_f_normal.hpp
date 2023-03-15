@@ -275,67 +275,43 @@ vector<float> Speed_F_Normal::fuerza_tangencial(float vertices_talud[])
     float module = abs_[1];
     if (abs_[1] < 0)
         module = -module;
-    cout << "module " << module << endl;
 
     vector<float> vector_velocity = velocidad(vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
     vector<float> w = velocidad_vec_contacto(vertices_talud);
     float mu_fn = coeficiente_friccion(vertices_talud);
-    cout << "mu_fn " << mu_fn << endl;
 
-    float mu_fn_i = mu_fn * w[2];
-    float mu_fn_j = mu_fn * w[3];
-    cout << "mu_Fn_i " << mu_fn_i << endl;
-    cout << "mu_Fn_j " << mu_fn_j << endl;
+    float mu_fn_i = mu_fn * -w[2];
+    float mu_fn_j = mu_fn * -w[3];
 
     float G_star = equivalent_shear_modulus();
     float r_star = radio_equivalente();
     float kt = 8 * G_star * sqrt(r_star * module);
-
-    cout << "G_star " << G_star << endl;
-    cout << "r_star " << r_star << endl;
-    cout << "Kt " << kt << endl;
 
     float gama = gamma_t();
     float F_tangecial_amortiguadora = 2 * gama * sqrt(m_star * kt);
     float F_tangecial_amortiguadora_i = F_tangecial_amortiguadora * vector_velocity[0];
     float F_tangecial_amortiguadora_j = F_tangecial_amortiguadora * vector_velocity[1];
 
-    cout << "gama " << gama << endl;
-    cout << "F_tangencial_amortiguadora " << F_tangecial_amortiguadora << endl;
-    cout << "F_tangencial_amortiguadora_i " << F_tangecial_amortiguadora_i << endl;
-    cout << "F_tangencial_amortiguadora_j " << F_tangecial_amortiguadora_j << endl;
-
     float step_back_i = 0;
     float step_back_j = 0;
 
     float k_i_t_deltatime_i = kt * draw.h * vector_velocity[0];
     float k_i_t_deltatime_j = kt * draw.h * vector_velocity[1];
-    cout << "K_i_t_deltatime_i " << k_i_t_deltatime_i << endl;
-    cout << "K_i_t_deltatime_j " << k_i_t_deltatime_j << endl;
 
     float actual_fuerza_tangencial_resorte_i = k_i_t_deltatime_i + step_back_i;
     float actual_fuerza_tangencial_resorte_j = k_i_t_deltatime_j + step_back_j;
-    cout << "actual_fuerza_tangencial_resorte_i " << actual_fuerza_tangencial_resorte_i << endl;
-    cout << "actual_fuerza_tangencial_resorte_j " << actual_fuerza_tangencial_resorte_j << endl;
 
     actual_fuerza_tangencial_resorte_i = -actual_fuerza_tangencial_resorte_i;
     actual_fuerza_tangencial_resorte_j = -actual_fuerza_tangencial_resorte_j;
-    cout << "actual_fuerza_tangencial_resorte_i " << actual_fuerza_tangencial_resorte_i << endl;
-    cout << "actual_fuerza_tangencial_resorte_j " << actual_fuerza_tangencial_resorte_j << endl;
 
     F_tangecial_amortiguadora_i = -F_tangecial_amortiguadora_i;
     F_tangecial_amortiguadora_j = -F_tangecial_amortiguadora_j;
-    cout << "F_tangecial_amortiguadora_i " << F_tangecial_amortiguadora_i << endl;
-    cout << "F_tangecial_amortiguadora_j " << F_tangecial_amortiguadora_j << endl;
 
     //PROBLEMA ESTA AQUI
     float Ft_i = actual_fuerza_tangencial_resorte_i + F_tangecial_amortiguadora_i;
     float Ft_j = actual_fuerza_tangencial_resorte_j + F_tangecial_amortiguadora_j;
-    cout<<"Ft_i "<<Ft_i<<endl;    
-    cout<<"Ft_j "<<Ft_j<<endl;
 
     float Ft = sqrt((Ft_i * Ft_i) + (Ft_j * Ft_j));
-    cout<<"Ft "<<Ft<<endl;
 
     float rpta;
     vector<float> vector_rpta;
@@ -353,13 +329,13 @@ vector<float> Speed_F_Normal::fuerza_tangencial(float vertices_talud[])
         vector_rpta.push_back(Ft_j);
     }
 
-    cout << "FUNCION PARA LA FUERZA TANGENCIAL" << endl;
+    /*cout << "FUNCION PARA LA FUERZA TANGENCIAL" << endl;
     for (int i = 0; i < vector_rpta.size(); i++)
     {
         cout << vector_rpta[i] << " ";
     }
     cout << endl
-         << endl;
+         << endl;*/
 
     return vector_rpta;
 }
@@ -373,11 +349,11 @@ float Speed_F_Normal::momentos(float vertices_talud[])
     float f_total_i = f_n[0] + f_t[0];
     float f_total_j = f_n[1] + f_t[1];
 
-    float M_G = (rc[0] * f_total_j) + (rc[1] * f_total_i);
+    float M_G = (rc[0] * f_total_j) - (rc[1] * f_total_i);
 
-    cout << "FUNCION PARA CALCULAR EL MOMENTO" << endl;
+    /*cout << "FUNCION PARA CALCULAR EL MOMENTO" << endl;
     cout << M_G << endl
-         << endl;
+         << endl;*/
 
     return M_G;
 }
