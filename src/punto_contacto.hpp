@@ -19,7 +19,7 @@ class PuntoContacto
 private:
     Draw draw;
     int dimension = 2;
-    float theta_talud = 10 * 3.1416 / 180;
+    float theta_talud = 0.0f * 3.1416f / 180.0f;
     float matriz_angulos[2][2] = {{cos(theta_talud), -sin(theta_talud)}, {sin(theta_talud), cos(theta_talud)}};
     float vertices_resta[6];
     float vertices_locales_talud[6];
@@ -251,7 +251,7 @@ vector<float> PuntoContacto::locales(float current_center_mass_X, float current_
     /*cout << "FUNCION LOCALES" << endl;
     for (int i = 0; i < medio_locales.size(); i++)
     {
-        cout << medio_locales[i] << " ";
+        cout << medio_locales[i]<< " ";
     }
     cout << endl
          << endl;*/
@@ -282,26 +282,14 @@ vector<float> PuntoContacto::machine(float current_center_mass_X, float current_
     double e_c = ((bl * bl) - 1);
 
     double s1 = 0, s2 = 0;
-    double discriminant = e_b * e_b - 4 * e_a * e_c;
+    double discriminant = (e_b * e_b) - 4 * e_a * e_c;
     double raizdiscriminant = sqrt(abs(discriminant));
-    float parteReal = 0, parteImaginaria = 0;
-    /*while (!evalucion(e_a, e_b, e_c))
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cout << "PURO VACIO";
-    }*/
+    float parteReal = 0.0f, parteImaginaria = 0.0f;
 
-    if (discriminant > 0)
+    if (discriminant > 0 || discriminant == 0)
     {
         s1 = (-e_b + raizdiscriminant) / (2 * e_a);
         s2 = (-e_b - raizdiscriminant) / (2 * e_a);
-        collision = true;
-        // cout << "CHOCO AL FIN" << endl;
-    }
-    else if (discriminant == 0)
-    {
-        s1 = -e_b / (2 * e_a);
-        s2 = -e_b / (2 * e_a);
         collision = true;
         // cout << "CHOCO AL FIN" << endl;
     }
@@ -334,8 +322,8 @@ vector<float> PuntoContacto::machine(float current_center_mass_X, float current_
 
     // cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
 
-    float punto_medio_x = (_x1_ + _x2_) / 2;
-    float punto_medio_y = (_y1_ + _y2_) / 2;
+    float punto_medio_x = (_x1_ + _x2_) / 2.0f;
+    float punto_medio_y = (_y1_ + _y2_) / 2.0f;
 
     // cout << "(XC , YC) = (" << punto_medio_x << " ," << punto_medio_y << ")" << endl;
 

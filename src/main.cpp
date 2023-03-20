@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "draw.hpp"
+#include "Rk.hpp"
 #include "punto_contacto.hpp"
 #include "speed_f_normal.hpp"
 
@@ -77,16 +78,16 @@ int main()
     float Yd = origen_y / scale;
 
     // Non-scaled radius => Scaled radius
-    float radio_mayor = 40.0f;
-    float radio_menor = 30.0f;
+    float radio_mayor = 20.0f;
+    float radio_menor = 15.0f;
     float a = radio_mayor / scale;
     float b = radio_menor / scale;
 
     // Rock Computing Utils [Runge Kutta]
-    float vx = 100.9f;
-    float vy = 20.0f;
+    float vx = 155.9f;
+    float vy = 90.0f;
     float theta = 0.0f * M_PI / 180.0f;
-    Draw elipse(Xd, Yd, a, b, vx, vy, theta, NUMBER_OF_SECTIONS);
+    Draw elipse(Xd, Yd, a, b, NUMBER_OF_SECTIONS);
     /*****************************************************************************/
 
     // Raw Vertex Data
@@ -187,13 +188,15 @@ int main()
     vector<float> vy_array;
     vector<float> theta_array;
 
-    elipse.runge_kutta(x_array, y_array, vx_array, vy_array, theta_array);
+    PuntoContacto inter(elipse);
+    Speed_F_Normal speed(elipse);
+
+    RungeKutta rk(vx, vy, theta, elipse, speed);
+    rk.runge_kutta(x_array, y_array, vx_array, vy_array, theta_array);
 
     int n = vx_array.size();
 
     int pos = 1;
-    PuntoContacto inter(elipse);
-    Speed_F_Normal speed(elipse);
     //gil::Timer timer(true);
     while (window.isActive())
     {
@@ -246,15 +249,15 @@ int main()
             inter.superposition(centro_masa_X , centro_masa_Y , talud_vertex_data);
             if (inter.collision == true)
             {
+                cout<<current_velocity_X << " "<<current_velocity_Y << " " << angle<< endl;
+                // Calcula las fuerzas para el rebote
+                speed.momentos(centro_masa_X , centro_masa_Y , current_velocity_X , current_velocity_Y , angle, talud_vertex_data);
                 return 0;
 
                 // Iran las funciones que haran que la elipse rebote
                 
-                // Calcula las fuerzas para el rebote
-                /*speed.momentos(centro_masa_X , centro_masa_Y , current_velocity_X , current_velocity_Y , angle, talud_vertex_data);
-            
                 //calcular de nuevo Rk
-                while(current_velocity_X != 0 && current_velocity_Y != 0)
+                /*while(current_velocity_X != 0 && current_velocity_Y != 0)
                 {
                     
                 }*/
