@@ -1,55 +1,60 @@
 #ifndef DRAW_HPP
 #define DRAW_HPP
 
-#include <math.h>
 #include <vector>
 #include <iostream>
 
-using namespace std;
+#include <cmath>
+#ifdef M_PI
+    #undef M_PI
+#endif
+#define M_PI 3.14159265358979323846f
 
-const float pi = 3.14;
+using std::vector;
 
 class Draw
 {
 private:
-    float Xd;
-    float Yd;
-    float a;
-    float b;
-    double inclinacion = 0.0f;
-    int salto_angulos_draw = 20;
-    int n_triangulos = 360 / salto_angulos_draw;
-    int index_vertices = 3;
-    int index_indices = 0;
-    int index_indices_value = 1;
+    float a = 0.0f;
+    float b = 0.0f;
+    float Xd = 0.0f;
+    float Yd = 0.0f;
+    int number_of_sections = 0;
 
     // RK
-    float vx0;
-    float vy0;
-    float theta0;
-    float h = 0.000001;
-    float w = 0.5f;
+    float vx0 = 0.0f;
+    float vy0 = 0.0f;
+    float theta0 = 0.0f;
+    float h = 1.0f;
+    float w = 0.2f;
     float t0 = 0.0f;
     float tf = 20.0f;
     float masa = 120.0f;
     float fuerza = 0.0f;
     const float g = 9.81f;
-    float I = masa * (a * b )* (a * a + b * b) / 4.0;
+    float MG = 0.0f;
+
+    float I = 0.0f;
 
 public:
-    int n = (tf - t0) / h;
+    int n;
 
     Draw();
-    Draw(float Xd, float Yd, float a, float b, float vx, float vy, float theta);
-    float radianes(float angulo);
+    Draw(float Xd, float Yd, float a, float b, float vx0, float vy0, float theta0, int number_of_sections);
+    float degrees_to_radians(float angulo);
     void vertices_elipse(float vertices[]);
     void indices_elipse(unsigned int indices[]);
     /*void movimiento_proyectil(float t, float Xd, float Yd, float &vx, float &vy, float &theta);
     void move(float delta_pos_x[], float delta_pos_y[], float theta_array[]);*/
 
-    double Fx();
-    double Fy();
-    void runge_kutta(vector<float>& posiciones_x , vector<float>& posiciones_y, vector<float>& velocidades_x , vector<float>& velocidades_y , vector<float>& angulos);
+    //sumatoria de fuerzas
+    float Fx();
+    float Fy();
+    void runge_kutta(vector<float>& posiciones_x,
+                     vector<float>& posiciones_y,
+                     vector<float>& velocidades_x,
+                     vector<float>& velocidades_y,
+                     vector<float>& angulos);
 
     friend class Superposition;
     friend class PuntoContacto;
@@ -58,17 +63,21 @@ public:
 
 Draw::Draw()
 {
-    Xd = 0;
-    Yd = 0;
-    a = 0;
-    b = 0;
+    Xd = 0.0f;
+    Yd = 0.0f;
+    a = 0.0f;
+    b = 0.0f;
 
-    vx0 = 0;
-    vy0 = 0;
-    theta0 = 0;
+    vx0 = 0.0f;
+    vy0 = 0.0f;
+    theta0 = 0.0f;
+    number_of_sections = 0;
+
+    I = 0.0f;
+    n = 0;
 };
 
-Draw::Draw(float Xd, float Yd, float a, float b, float vx0, float vy0, float theta0)
+Draw::Draw(float Xd, float Yd, float a, float b, float vx0, float vy0, float theta0, int number_of_sections)
 {
     this->Xd = Xd;
     this->Yd = Yd;
@@ -77,76 +86,84 @@ Draw::Draw(float Xd, float Yd, float a, float b, float vx0, float vy0, float the
     this->vx0 = vx0;
     this->vy0 = vy0;
     this->theta0 = theta0;
+    this->number_of_sections = number_of_sections;
+
+    I = masa * (a * b) * (a * a + b * b) / 4.0f;
+    n = (tf - t0) / h;
 }
 
-float Draw::radianes(float angulo)
+float Draw::degrees_to_radians(float angulo)
 {
-    return (angulo * pi) / 180;
+    return (angulo * M_PI) / 180.0f;
 }
 
-void Draw::vertices_elipse(float vertices[])
+void Draw::vertices_elipse(float vertex_data[])
 {
-    vertices[0] = Xd;
-    vertices[1] = Yd;
-    vertices[2] = 0.0f;
+    float angle_step = 360.0f / static_cast<float>(number_of_sections);
+
+    vertex_data[0] = Xd;
+    vertex_data[1] = Yd;
+    vertex_data[2] = 0.0f;
+
+    vertex_data[3] = 0.0f;
+    vertex_data[4] = 0.0f;
+    vertex_data[5] = 1.0f;
 
     // llenar array de vertices (x,y,z=0)
-    for (int i = 0; i < n_triangulos; i++)
+    float angle = 0.0f;
+    for (int i = 1; i < number_of_sections + 1; ++i)
     {
-        inclinacion = inclinacion + salto_angulos_draw;
-        vertices[index_vertices] = Xd + float(a * cos(radianes(inclinacion))); // coordenada X
-        index_vertices++;
-        vertices[index_vertices] = Yd + float(b * sin(radianes(inclinacion))); // coordenada Y
-        index_vertices++;
-        vertices[index_vertices] = 0.0f; // coordenada Z
-        index_vertices++;
+        vertex_data[i * 6 + 0] = Xd + (a * cosf(degrees_to_radians(angle))); // coordenada X
+        vertex_data[i * 6 + 1] = Yd + (b * sinf(degrees_to_radians(angle))); // coordenada Y
+        vertex_data[i * 6 + 2] = 0.0f; // coordenada Z
+
+        vertex_data[i * 6 + 3] = 0.0f;
+        vertex_data[i * 6 + 4] = 0.0f;
+        vertex_data[i * 6 + 5] = 1.0f;
+
+        angle += angle_step;
     }
 }
 
 void Draw::indices_elipse(unsigned int indices[])
 {
     // llenar el array de indices
-    for (int j = 1; j < n_triangulos; j++)
+    int current_index_base = 1;
+    for (int j = 0; j < number_of_sections; ++j)
     {
-        indices[index_indices] = 0; // todos los triangulos parten del centro
-        index_indices++;
-        indices[index_indices] = index_indices_value; // 2do vertices
-        index_indices++;
-        index_indices_value++;
-        indices[index_indices] = index_indices_value; // 3er vertice
-        index_indices++;
+        indices[j * 3 + 0] = 0; // todos los triangulos parten del centro
+        indices[j * 3 + 1] = current_index_base + 0; // 2do vertices
+        indices[j * 3 + 2] = current_index_base + 1; // 3er vertice
+        ++current_index_base;
     }
-    indices[index_indices] = index_indices_value;
-    index_indices++;
-    indices[index_indices] = 0;
-    index_indices++;
-    indices[index_indices] = 1;
+    indices[(number_of_sections - 1) * 3 + 2] = 1;
 }
 
 // Funciones para calcular las fuerzas en x e y
-double Draw::Fx()
+float Draw::Fx()
 {
-    return 0; // Agregue su función de fuerza en x aquí
+    return 0.0; // Agregue su función de fuerza en x aquí
 }
 
-double Draw::Fy()
+float Draw::Fy()
 {
     return -masa * g; // Agregue su función de fuerza en y aquí
 }
 
 // Función para implementar el método de Runge-Kutta de cuarto orden
-void Draw::runge_kutta(vector<float>& posiciones_x , vector<float>& posiciones_y, vector<float>& velocidades_x , vector<float>& velocidades_y , vector<float>& angulos)
+void Draw::runge_kutta(vector<float>& posiciones_x, vector<float>& posiciones_y,
+                       vector<float>& velocidades_x, vector<float>& velocidades_y,
+                       vector<float>& angulos)
 {
-    double x = Xd, y = Yd, vx = vx0, vy = vy0, theta = theta0;
-    double k1x, k2x, k3x, k4x, k1y, k2y, k3y, k4y, k1vx, k2vx, k3vx, k4vx, k1vy, k2vy, k3vy, k4vy;
-    double k1omega, k2omega, k3omega, k4omega, k1theta, k2theta, k3theta, k4theta;
-    double MG = 0;
-    double derivada_w = MG / I;
+    float x = Xd, y = Yd, vx = vx0, vy = vy0, theta = theta0;
+    float k1x, k2x, k3x, k4x, k1y, k2y, k3y, k4y, k1vx, k2vx, k3vx, k4vx, k1vy, k2vy, k3vy, k4vy;
+    float k1omega, k2omega, k3omega, k4omega, k1theta, k2theta, k3theta, k4theta;
+    float derivada_w = MG / I;
 
-    for (int i = 0; t0 + i * h <= tf; i++)
+    for (int i = 0; t0 + i * h <= tf; ++i)
     {
-        double t = t0 + i * h;
-        //cout<<"T: "<<t<<endl;
+        float t = t0 + i * h;
+
         posiciones_x.push_back(x);
         posiciones_y.push_back(y);
         velocidades_x.push_back(vx);
@@ -162,17 +179,17 @@ void Draw::runge_kutta(vector<float>& posiciones_x , vector<float>& posiciones_y
 
         k2vx = Fx();
         k2vy = Fy() / masa;
-        k2x = vx + k1vx * h / 2.0;
-        k2y = vy + k1vy * h / 2.0;
+        k2x = vx + k1vx * h / 2.0f;
+        k2y = vy + k1vy * h / 2.0f;
         k2omega = derivada_w;
-        k2theta = w + derivada_w * (t + 0.5 * h);
+        k2theta = w + derivada_w * (t + 0.5f * h);
 
         k3vx = Fx();
         k3vy = Fy() / masa;
-        k3x = vx + k2vx * h / 2.0;
-        k3y = vy + k2vy * h / 2.0;
+        k3x = vx + k2vx * h / 2.0f;
+        k3y = vy + k2vy * h / 2.0f;
         k3omega = derivada_w;
-        k3theta = w + derivada_w * (t + 0.5 * h);
+        k3theta = w + derivada_w * (t + 0.5f * h);
 
         k4vx = Fx();
         k4vy = Fy() / masa;
@@ -181,11 +198,11 @@ void Draw::runge_kutta(vector<float>& posiciones_x , vector<float>& posiciones_y
         k4omega = derivada_w;
         k4theta = w + derivada_w * (t + h);
 
-        x += (h / 6.0) * (k1x + 2.0 * k2x + 2.0 * k3x + k4x);
-        y += (h / 6.0) * (k1y + 2.0 * k2y + 2.0 * k3y + k4y);
-        vx += (h / 6.0) * (k1vx + 2.0 * k2vx + 2.0 * k3vx + k4vx);
-        vy += (h / 6.0) * (k1vy + 2.0 * k2vy + 2.0 * k3vy + k4vy);
-        theta += (h / 6.0) * (k1theta + 2.0 * k2theta + 2.0 * k3theta + k4theta);
+        x += (h / 6.0f) * (k1x + 2.0f * k2x + 2.0f * k3x + k4x);
+        y += (h / 6.0f) * (k1y + 2.0f * k2y + 2.0f * k3y + k4y);
+        vx += (h / 6.0f) * (k1vx + 2.0f * k2vx + 2.0f * k3vx + k4vx);
+        vy += (h / 6.0f) * (k1vy + 2.0f * k2vy + 2.0f * k3vy + k4vy);
+        theta += (h / 6.0f) * (k1theta + 2.0f * k2theta + 2.0f * k3theta + k4theta);
     }
 }
 

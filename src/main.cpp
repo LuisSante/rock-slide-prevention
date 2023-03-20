@@ -1,154 +1,187 @@
+/*****************************************************************************/
+
+#include <HSGIL/hsgil.hpp>
+
+#include <chrono>
+#include <thread>
+#include <string>
+#include <vector>
+#include <fstream>
 #include <iostream>
-#include <math.h>
-#include <chrono> // para la medición del tiempo
-#include <thread> // para la gestión de hilos
+
+#include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <fstream>
-#include <string>
 
 #include "draw.hpp"
 #include "punto_contacto.hpp"
 #include "speed_f_normal.hpp"
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+using std::vector;
 
-using namespace std;
+// Window Size Settings
+constexpr unsigned int SCR_WIDTH = 4000;
+constexpr unsigned int SCR_HEIGHT = 4000;
 
-// settings
-const unsigned int SCR_WIDTH = 4000;
-const unsigned int SCR_HEIGHT = 4000;
+constexpr unsigned int SIZE_COORD_GRID = 4;
 
-// control de velocidad de ejecución
-double lastTime = glfwGetTime();
-double deltaTime = 0.0;
-double desiredFPS = 60.0;
-double frameTime = 1.0 / desiredFPS;
+constexpr unsigned int NUMBER_OF_SECTIONS = 18;
+constexpr unsigned int ROCK_VERTEX_DATA_SIZE = (NUMBER_OF_SECTIONS + 1) * 6;
+constexpr unsigned int ROCK_INDICES_SIZE = NUMBER_OF_SECTIONS * 3;
 
-void processInput(GLFWwindow *window)
+/*****************************************************************************/
+void transformVertices(float* vertices, int numVertices, const glm::mat4& transform)
 {
-    // float deltaTime{ getDeltaTime() };
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void transformVertices(float *vertices, int numVertices, glm::mat4 transform)
-{
-    for (int i = 0; i < numVertices; i += 3)
+    for (int i = 0; i < numVertices + 1; ++i)
     {
-        glm::vec4 transformedVertex = transform * glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
-        vertices[i] = transformedVertex.x;
-        vertices[i + 1] = transformedVertex.y;
-        vertices[i + 2] = transformedVertex.z;
+        glm::vec4 transformedVertex = transform * glm::vec4(vertices[i * 6 + 0],
+                                                            vertices[i * 6 + 1],
+                                                            vertices[i * 6 + 2],
+                                                            1.0f);
+        vertices[i * 6 + 0] = transformedVertex.x;
+        vertices[i * 6 + 1] = transformedVertex.y;
+        vertices[i * 6 + 2] = transformedVertex.z;
     }
 }
 
-const char *vertexShaderSource = "#version 330 core\n"
-                                 "layout (location = 0) in vec3 aPos;\n"
-                                 "layout (location = 1) in vec3 aColor;\n"
-                                 "uniform mat4 transform; \n"
-                                 "out vec3 ourColor;\n"
-                                 "void main()\n"
-                                 "{\n"
-                                 "   gl_Position = transform * vec4(aPos, 1.0);\n"
-                                 "   ourColor = aColor;\n"
-                                 "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "in vec3 ourColor;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "   FragColor = vec4(ourColor, 1.0f);\n"
-                                   "}\n\0";
-
-const char *vertexShaderSource_talud = "#version 330 core\n"
-                                       "layout (location = 0) in vec3 aPos;\n"
-                                       "void main()\n"
-                                       "{\n"
-                                       "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                       "}\0";
-
-const char *fragmentShaderSource_talud = "#version 330 core\n"
-                                         "out vec4 FragColor;\n"
-                                         "void main()\n"
-                                         "{\n"
-                                         "   FragColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);\n"
-                                         "}\n\0";
-
-const char *vertexShaderSource_grid = "#version 330 core\n"
-                                      "layout (location = 0) in vec3 aPos;\n"
-                                      "void main()\n"
-                                      "{\n"
-                                      "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                      "}\0";
-
-const char *fragmentShaderSource_grid = "#version 330 core\n"
-                                        "out vec4 FragColor;\n"
-                                        "void main()\n"
-                                        "{\n"
-                                        "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-                                        "}\n\0";
+/*****************************************************************************/
 int main()
 {
-    ofstream output("C:/Users/Usuario/Desktop/hilarios/src/report.txt");
+    // Window Setup
+    /*****************************************************************************/
+    gil::RenderingWindow window(SCR_WIDTH, SCR_HEIGHT, "Rendering");
+    if (!window.isReady())
+    {
+        return -1;
+    }
 
-    float escala = 1;
-    float origen_x = 8.045, origen_y = 8.045;
-    float Xd = origen_x / escala;
-    float Yd = origen_y / escala;
+    gil::InputHandler inputHandler;
+    window.setInputHandler(inputHandler);
 
-    float radio_mayor = 2.5, radio_menor = 1.5;
-    float a = radio_mayor / escala, b = radio_menor / escala;
-    float vertices[57]; // coordenada de origen
-    unsigned int indices[54];
+    gil::Shader rockShader("rock");
+    gil::Shader taludShader("talud");
+    gil::Shader gridShader("grid");
 
-    /*runge kutta*/
-    float vx = 2.0f;
-    float vy = -2.0f;
-    float theta = 0.0 * 3.14 / 180.0;
+    std::ofstream output("C:/Users/Usuario/Desktop/hilarios/src/report.txt");
+    /*****************************************************************************/
 
-    float vertices_talud[6] = {0.5, 12, 0, 12.5, 1, 0};
-    Draw elipse(Xd, Yd, a, b, vx, vy, theta);
+    // Initial Setup Stuff
+    /*****************************************************************************/
+    // General Scale
+    float scale = 3500.0f;
+
+    // Non-sacled origin => Scaled origin
+    float origen_x = 0.0f;
+    float origen_y = 0.0f;
+    float Xd = origen_x / scale;
+    float Yd = origen_y / scale;
+
+    // Non-scaled radius => Scaled radius
+    float radio_mayor = 40.0f;
+    float radio_menor = 30.0f;
+    float a = radio_mayor / scale;
+    float b = radio_menor / scale;
+
+    // Rock Computing Utils [Runge Kutta]
+    float vx = 155.9f;
+    float vy = 90.0f;
+    float theta = 0.0f * M_PI / 180.0f;
+    Draw elipse(Xd, Yd, a, b, vx, vy, theta, NUMBER_OF_SECTIONS);
     PuntoContacto inter(elipse);
     Speed_F_Normal speed(elipse);
+    /*****************************************************************************/
 
-    /*coordenadas del talud*/
-    const int size_coor_grid = 4;
-    float talud[size_coor_grid * 3];
-    unsigned int indices_grid[size_coor_grid * 3];
+    // Raw Vertex Data
+    /*****************************************************************************/
+    // Rock raw data
+    float rock_vertex_data[ROCK_VERTEX_DATA_SIZE];
+    unsigned int rock_indices[ROCK_INDICES_SIZE];
+    elipse.vertices_elipse(rock_vertex_data);
+    elipse.indices_elipse(rock_indices);
 
-    float vertices_grid[] = {
-        -1.0f,0.0f,0.0,1.0f,0.0f,0.0,
-
-        -1.0f,0.5f,0.0,1.0f,0.5f,0.0,
-
-        0.5f,-1.0f,0.0,0.5f,1.0f,0.0,
-
-        0.0f,-1.0f,0.0,0.0f,1.0f,0.0,
-
-        -0.5f,-1.0f,0.0,-0.5f,1.0f,0.0,
-
-        -1.0f,-0.5f,0.0,1.0f,-0.5f,0.0
+    // Talud raw data
+    float grid_vertex_data[] = {
+        -1.0f,  0.0f, 0.0f,     1.0f,  0.0f, 0.0f,
+        -1.0f,  0.5f, 0.0f,     1.0f,  0.5f, 0.0f,
+         0.5f, -1.0f, 0.0f,     0.5f,  1.0f, 0.0f,
+         0.0f, -1.0f, 0.0f,     0.0f,  1.0f, 0.0f,
+        -0.5f, -1.0f, 0.0f,    -0.5f,  1.0f, 0.0f,
+        -1.0f, -0.5f, 0.0f,     1.0f, -0.5f, 0.0f
     };
 
-    elipse.vertices_elipse(vertices);
-    elipse.indices_elipse(indices);
+    // Talud raw data
+    float talud[SIZE_COORD_GRID * 3];
+    float talud_vertex_data[6] = {
+        -1.0f, -0.02f, 0.0f, 1.0f, -0.02f, 0.0f
+    };
+
+    /*****************************************************************************/
+
+    unsigned int VAO_rock = 0;
+    unsigned int VBO_rock = 0;
+    unsigned int EBO_rock = 0;
+
+    glGenVertexArrays(1, &VAO_rock);
+    glGenBuffers(1, &VBO_rock);
+    glGenBuffers(1, &EBO_rock);
+
+    glBindVertexArray(VAO_rock);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_rock);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rock_vertex_data), rock_vertex_data, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_rock);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rock_indices), rock_indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (const void*)(0 * sizeof(float)));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (const void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    /*****************************************************************************/
+
+    unsigned int VAO_grid = 0;
+    unsigned int VBO_grid = 0;
+
+    glGenVertexArrays(1, &VAO_grid);
+    glGenBuffers(1, &VBO_grid);
+
+    glBindVertexArray(VAO_grid);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_grid);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(grid_vertex_data), grid_vertex_data, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    /*****************************************************************************/
+
+    unsigned int VAO_talud = 0;
+    unsigned int VBO_talud = 0;
+
+    glGenVertexArrays(1, &VAO_talud);
+    glGenBuffers(1, &VBO_talud);
+
+    glBindVertexArray(VAO_talud);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_talud);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(talud_vertex_data), talud_vertex_data, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    /*****************************************************************************/
 
     vector<float> x_array;
     vector<float> y_array;
@@ -156,312 +189,89 @@ int main()
     vector<float> vy_array;
     vector<float> theta_array;
 
-    elipse.runge_kutta(x_array, y_array , vx_array , vy_array , theta_array);
-
-    inter.superposition(vertices_talud);
-    cout<<endl<<endl;
-    speed.momentos(vertices_talud);
+    elipse.runge_kutta(x_array, y_array, vx_array, vy_array, theta_array);
+    inter.superposition(talud_vertex_data);
+    speed.momentos(talud_vertex_data);
 
     int n = vx_array.size();
-    /*for (int i = 0; i < n; i++)
-    {
-        cout<<x_array[i]<<" "<<y_array[i]<<" "<<vx_array[i]<<" "<<vy_array[i]<<" "<<theta_array[i]<<endl;
-    }*/
-
-
-
-
-    /******************************************************************************************************************************/
-
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef _APPLE_
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetKeyCallback(window, key_callback);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    /******************************************************************************************************/
-
-    unsigned int VBO, VAO, EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
-
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    /******************************************************************************************************/
-
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    glUseProgram(shaderProgram);
-
-    /******************************************************************************************************/
-    unsigned int vertexShader_grid = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader_grid, 1, &vertexShaderSource_grid, NULL);
-    glCompileShader(vertexShader_grid);
-
-    int success_grid;
-    char infoLog_grid[512];
-    glGetShaderiv(vertexShader_grid, GL_COMPILE_STATUS, &success_grid);
-    if (!success_grid)
-    {
-        glGetShaderInfoLog(vertexShader_grid, 512, NULL, infoLog_grid);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog_grid << std::endl;
-    }
-
-    unsigned int fragmentShader_grid = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader_grid, 1, &fragmentShaderSource_grid, NULL);
-    glCompileShader(fragmentShader_grid);
-
-    glGetShaderiv(fragmentShader_grid, GL_COMPILE_STATUS, &success_grid);
-    if (!success_grid)
-    {
-        glGetShaderInfoLog(fragmentShader_grid, 512, NULL, infoLog_grid);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog_grid << std::endl;
-    }
-
-    unsigned int shaderProgram_grid = glCreateProgram();
-    glAttachShader(shaderProgram_grid, vertexShader_grid);
-    glAttachShader(shaderProgram_grid, fragmentShader_grid);
-    glLinkProgram(shaderProgram_grid);
-
-    glGetProgramiv(shaderProgram_grid, GL_LINK_STATUS, &success_grid);
-    if (!success_grid)
-    {
-        glGetProgramInfoLog(shaderProgram_grid, 512, NULL, infoLog_grid);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog_grid << std::endl;
-    }
-    glDeleteShader(vertexShader_grid);
-    glDeleteShader(fragmentShader_grid);
-
-    /******************************************************************************************************/
-
-    unsigned int VBO_grid, VAO_grid;
-    glGenVertexArrays(1, &VAO_grid);
-    glGenBuffers(1, &VBO_grid);
-    glBindVertexArray(VAO_grid);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_grid);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_grid), vertices_grid, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    /******************************************************************************************************/
-
-    unsigned int vertexShader_talud = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader_talud, 1, &vertexShaderSource_talud, NULL);
-    glCompileShader(vertexShader_talud);
-
-    int success_talud;
-    char infoLog_talud[512];
-    glGetShaderiv(vertexShader_grid, GL_COMPILE_STATUS, &success_talud);
-    if (!success_talud)
-    {
-        glGetShaderInfoLog(vertexShader_talud, 512, NULL, infoLog_talud);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog_talud << std::endl;
-    }
-
-    unsigned int fragmentShader_talud = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader_talud, 1, &fragmentShaderSource_talud, NULL);
-    glCompileShader(fragmentShader_talud);
-
-    glGetShaderiv(fragmentShader_talud, GL_COMPILE_STATUS, &success_talud);
-    if (!success_talud)
-    {
-        glGetShaderInfoLog(fragmentShader_talud, 512, NULL, infoLog_talud);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog_talud << std::endl;
-    }
-
-    unsigned int shaderProgram_talud = glCreateProgram();
-    glAttachShader(shaderProgram_talud, vertexShader_talud);
-    glAttachShader(shaderProgram_talud, fragmentShader_talud);
-    glLinkProgram(shaderProgram_talud);
-
-    glGetProgramiv(shaderProgram_talud, GL_LINK_STATUS, &success_talud);
-    if (!success_talud)
-    {
-        glGetProgramInfoLog(shaderProgram_talud, 512, NULL, infoLog_talud);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog_talud << std::endl;
-    }
-    glDeleteShader(vertexShader_talud);
-    glDeleteShader(fragmentShader_talud);
-
-    unsigned int VBO_talud, VAO_talud;
-    glGenVertexArrays(1, &VAO_talud);
-    glGenBuffers(1, &VBO_talud);
-    glBindVertexArray(VAO_talud);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_talud);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_talud), vertices_talud, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    /******************************************************************************************************/
 
     int pos = 1;
-    while (!glfwWindowShouldClose(window))
+    gil::Timer timer(true);
+    while (window.isActive())
     {
+        // Pre Tick calls
+        window.pollEvents();
+        if (inputHandler.onKeyReleased(gil::KEY_ESCAPE))
+        {
+            window.close();
+            continue;
+        }
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        // OpenGL clearing functions
+        glClearColor(0.2f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        processInput(window);
-
-        glUseProgram(shaderProgram);
-
-        // render
-
+        // Rendering Stuff
         glm::mat4 transform = glm::mat4(1.0f);
         if (pos < n)
         {
-            output << "angle: " << theta_array[pos] << endl;
+            output << "Angle: " << theta_array[pos] << endl;
 
-            float traslate_X = x_array[pos] / escala;
-            float traslate_Y = y_array[pos] / escala;
+            float traslate_X = x_array[pos] / scale;
+            float traslate_Y = y_array[pos] / scale;
             float angle = theta_array[pos];
             transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
             transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
 
-            float outvertices[57];
-            memcpy(outvertices, vertices, sizeof(vertices));
+            float outvertices[ROCK_VERTEX_DATA_SIZE];
+            memcpy(outvertices, rock_vertex_data, sizeof(rock_vertex_data));
 
-            transformVertices(outvertices, 57, transform);
-
-            for (int i = 0; i < 57; i += 3)
+            transformVertices(outvertices, NUMBER_OF_SECTIONS, transform);
+            for (int i = 0; i < NUMBER_OF_SECTIONS + 1; ++i)
             {
-                output << "Vertex " << i / 3 << ": (" << outvertices[i] * 3500 << ", " << outvertices[i + 1] * 3500 << ", " << outvertices[i + 2] * 3500 << ")" << std::endl;
+                output << "Vertex " << i << ": (" <<
+                (outvertices[i * 6 + 0] * scale) << ", " <<
+                (outvertices[i * 6 + 1] * scale) << ", " <<
+                (outvertices[i * 6 + 2] * scale) << ")" << std::endl;
             }
-
-            pos++;
+            pos += 5;
         }
-
         else
         {
-            float traslate_X = x_array[n - 1] / escala;
-            float traslate_Y = y_array[n - 1] / escala;
+            float traslate_X = x_array[n - 1] / scale;
+            float traslate_Y = y_array[n - 1] / scale;
             float angle = theta_array[n - 1];
             transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
             transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
         }
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 57, GL_UNSIGNED_INT, 0);
-
-        glUseProgram(shaderProgram_grid);
+        gridShader.use();
         glBindVertexArray(VAO_grid);
         glDrawArrays(GL_LINES, 0, 100);
 
-        glUseProgram(shaderProgram_talud);
+        taludShader.use();
         glBindVertexArray(VAO_talud);
         glDrawArrays(GL_LINES, 0, 100);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        rockShader.use();
+        rockShader.setMat4("transform", transform);
+        glBindVertexArray(VAO_rock);
+        glDrawElements(GL_TRIANGLES, ROCK_VERTEX_DATA_SIZE, GL_UNSIGNED_INT, (const void*)0);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Post Tick Calls
+        window.swapBuffers();
+        timer.tick();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteVertexArrays(1, &VAO_rock);
+    glDeleteBuffers(1, &VBO_rock);
+    glDeleteBuffers(1, &EBO_rock);
 
     glDeleteVertexArrays(1, &VAO_grid);
     glDeleteBuffers(1, &VBO_grid);
-    glDeleteProgram(shaderProgram_grid);
 
-    glfwTerminate();
-//
+    glDeleteVertexArrays(1, &VAO_talud);
+    glDeleteBuffers(1, &VBO_talud);
+
     return 0;
 }

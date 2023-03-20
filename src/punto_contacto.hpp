@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <iomanip>
 
 #include "draw.hpp"
 
@@ -294,7 +295,7 @@ vector<float> PuntoContacto::machine(float vertices_talud[])
     {
         parteReal = -e_b / (2 * e_a);
         parteImaginaria = raizDiscriminante / (2 * e_a);
-        cout << "No hay interseccion" << endl;
+        //cout << "No hay interseccion" << endl;
     }
 
     double p1 = 0, p2 = 0;
@@ -341,28 +342,36 @@ vector<float> PuntoContacto::superposition(float vertices_talud[])
     vector<float> point_middle = machine(vertices_talud);
     float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
+    //cout<<pA1<<" "<<pA2<<endl;
 
     float sA1 = -point_middle[0] * pA1;
     float sA2 = -point_middle[0] * pA2;
+    //cout<<sA1<<" "<<sA2<<endl;
 
     float xA1 = sA1 * draw.a;
     float yA1 = pA1 * draw.b;
     float xA2 = sA2 * draw.a;
     float yA2 = pA2 * draw.b;
+    //cout<<xA1<<" "<<yA1<<" "<<xA2<<" "<<yA2<<endl;
 
     double xA1_ = ((matriz_angulos[0][0] * xA1) + (matriz_angulos[0][1] * yA1)) + draw.Xd;
     double yA1_ = ((matriz_angulos[1][0] * xA1) + (matriz_angulos[1][1] * yA1)) + draw.Yd;
     double xA2_ = ((matriz_angulos[0][0] * xA2) + (matriz_angulos[0][1] * yA2)) + draw.Xd;
     double yA2_ = ((matriz_angulos[1][0] * xA2) + (matriz_angulos[1][1] * yA2)) + draw.Yd;
+    //cout<<xA1_<<" "<<yA1_<<" "<<xA2_<<" "<<yA2_<<endl;
 
     double A = -(vertices_talud[4] - vertices_talud[1]) / (vertices_talud[3] - vertices_talud[0]);
     double B = 1;
     // double C = (-A * vertices_talud[0]) - vertices_talud[1];
     double C = (-A * vertices_talud[3]) - vertices_talud[4];
+    //cout<<A<<" "<<B<<" "<<C<<endl;
 
     // std::cout << A << " " << B << " " << C << std::endl;
+    //MOSTRARLE ESTO AL INGENIERO
     float per_1 = ((A * xA1_) + (B * yA1_) + C) / (sqrt((A * A) + (B * B)));
     float per_2 = ((A * xA2_) + (B * yA2_) + C) / (sqrt((A * A) + (B * B)));
+    //cout<<((A * xA2_) + (B * yA2_) + C)<<"                  "<<(sqrt((A * A) + (B * B)))<<endl;
+    //cout<<per_1<<" "<<per_2<<endl;
 
     // std::cout << per_1 << " " << per_2 << std::endl;
 
