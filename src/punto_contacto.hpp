@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <iomanip>
+#include <utility>
 
 #include <cmath>
 
@@ -27,6 +28,7 @@ private:
 
 public:
     bool collision;
+    pair<float , float> perpendicular; // Sigma n
 
     PuntoContacto();
     PuntoContacto(Draw draw);
@@ -34,9 +36,10 @@ public:
     bool descomposicion_LU(float matriz[2][2], int dimension, float L[2][2], float U[2][2]);
     bool resolver_sistema(float L[2][2], float U[2][2], float b[2], int dimension, float x[2]);
     bool calcular_inversa(float inversa[2][2]);
+
     vector<float> locales(float current_center_mass_X, float current_center_mass_Y, float vertices_talud_[], float inversa[2][2]);
     vector<float> machine(float current_center_mass_X, float current_center_mass_Y, float vertices_talud[]);
-    vector<float> superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_talud[]);
+    void superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_talud[]);
 };
 
 PuntoContacto::PuntoContacto()
@@ -48,6 +51,8 @@ PuntoContacto::PuntoContacto()
     }
 
     collision = false;
+    perpendicular.first = 0.0f;
+    perpendicular.second = 0.0f;
     /*ml = 0;
     bl = 0;*/
 }
@@ -59,6 +64,9 @@ PuntoContacto::PuntoContacto(Draw draw) : draw(draw)
         vertices_resta[i] = 0;
         vertices_locales_talud[i] = 0;
     }
+    collision = false;
+    perpendicular.first = 0.0f;
+    perpendicular.second = 0.0f;
 }
 
 void PuntoContacto::imprimir_matriz(float matriz[2][2])
@@ -341,9 +349,9 @@ vector<float> PuntoContacto::machine(float current_center_mass_X, float current_
     return medio;
 }
 
-vector<float> PuntoContacto::superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_talud[])
+void PuntoContacto::superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_talud[])
 {
-    vector<float> distance_perpendicular;
+    //vector<float> distance_perpendicular;
     vector<float> point_middle = machine(current_center_mass_X, current_center_mass_Y, vertices_talud);
     float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
@@ -375,13 +383,9 @@ vector<float> PuntoContacto::superposition(float current_center_mass_X, float cu
     // MOSTRARLE ESTO AL INGENIERO
     float per_1 = ((A * xA1_) + (B * yA1_) + C) / (sqrt((A * A) + (B * B)));
     float per_2 = ((A * xA2_) + (B * yA2_) + C) / (sqrt((A * A) + (B * B)));
-    // cout<<((A * xA2_) + (B * yA2_) + C)<<"                  "<<(sqrt((A * A) + (B * B)))<<endl;
-    // cout<<per_1<<" "<<per_2<<endl;
 
-    // std::cout << per_1 << " " << per_2 << std::endl;
-
-    distance_perpendicular.push_back(per_1);
-    distance_perpendicular.push_back(per_2);
+    perpendicular.first = per_1;
+    perpendicular.second = per_2;
 
     /*cout << "FUNCION PARA LA SUPERPOSICION: DISTANCIAS PERPENDICULARES" << endl;
     for (int i = 0; i < distance_perpendicular.size(); i++)
@@ -390,8 +394,6 @@ vector<float> PuntoContacto::superposition(float current_center_mass_X, float cu
     }
     cout << endl
          << endl;*/
-
-    return distance_perpendicular;
 }
 
 #endif

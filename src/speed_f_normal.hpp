@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <iomanip>
+#include <utility>
 
 #include <cmath>
 
@@ -11,7 +13,7 @@
 #include "punto_contacto.hpp"
 
 #ifdef M_PI
-    #undef M_PI
+#undef M_PI
 #endif
 #define M_PI 3.14159265358979323846f
 
@@ -41,20 +43,33 @@ private:
     float Ft_i;
     float Ft_j;
 
-
 public:
+    float FN;
+    float Ft;
+    float M_G;
+    vector<float> velocidad_sigma;
+
     Speed_F_Normal();
-    Speed_F_Normal(Draw draw) : draw(draw), contact(draw) {
-        this -> FN_i = 0.0f;
-        this -> FN_j = 0.0f;
-        this -> Ft_i = 0.0f;
-        this -> Ft_j = 0.0f;
+    Speed_F_Normal(Draw draw) : draw(draw), contact(draw)
+    {
+        this->FN_i = 0.0f;
+        this->FN_j = 0.0f;
+        this->Ft_i = 0.0f;
+        this->Ft_j = 0.0f;
+        this->FN = 0.0f;
+        this->Ft = 0.0f;
+        this->M_G = 0.0f;
+
+        for (int i = 0; i < velocidad_sigma.size(); i++)
+        {
+            velocidad_sigma[i] = 0;
+        }
     }
 
     float distancia_euclidiana(float x1, float y1, float x2, float y2);
     vector<float> vectores_rc(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
     vector<float> velocidad_vec_contacto(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
-    vector<float> velocidad(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
+    void velocidad(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
 
     float gamma_n();
     float gamma_t();
@@ -62,20 +77,28 @@ public:
     float radio_equivalente();
     float young_module();
     float equivalent_shear_modulus();
-    float fuerza_normal(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
+    void fuerza_normal(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
     float coeficiente_friccion(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
-    float fuerza_tangencial(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
-    float momentos(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
+    void fuerza_tangencial(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
+    void momentos(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
 
     friend class RungeKutta;
 };
 
-Speed_F_Normal :: Speed_F_Normal()
+Speed_F_Normal ::Speed_F_Normal()
 {
-    FN_i = 0;
-    FN_j = 0;
-    Ft_i = 0;
-    Ft_j = 0;
+    FN_i = 0.0f;
+    FN_j = 0.0f;
+    Ft_i = 0.0f;
+    Ft_j = 0.0f;
+    FN = 0.0f;
+    Ft = 0.0f;
+    M_G = 0.0f;
+
+    for (int i = 0; i < velocidad_sigma.size(); i++)
+    {
+        velocidad_sigma[i] = 0;
+    }
 }
 
 float Speed_F_Normal::distancia_euclidiana(float x1, float y1, float x2, float y2)
@@ -93,13 +116,14 @@ vector<float> Speed_F_Normal::vectores_rc(float current_center_mass_X, float cur
 
     vector<float> point_middle = contact.machine(current_center_mass_X, current_center_mass_Y, vertices_talud);
 
-    float r1 = (current_center_mass_X - point_middle[2]) * (current_center_mass_X - point_middle[2]);
-    float r2 = (current_center_mass_Y - point_middle[3]) * (current_center_mass_Y - point_middle[3]);
-    float rc = sqrt(r1 + r2);
+    double r1 = (current_center_mass_X - point_middle[2]) * (current_center_mass_X - point_middle[2]);
+    double r2 = (current_center_mass_Y - point_middle[3]) * (current_center_mass_Y - point_middle[3]);
+    double rc = sqrt(r1 + r2);
 
     // vectores
-    float rc_vi = point_middle[2] - current_center_mass_X;
-    float rc_vj = point_middle[3] - current_center_mass_Y;
+    float rc_vi = static_cast<double>(point_middle[2] - current_center_mass_X);
+    float rc_vj = static_cast<double>(point_middle[3] - current_center_mass_Y);
+    // cout<<rc_vi<<" "<<rc_vj<<endl;
 
     float angle_center = atan(rc_vj / rc_vi) + M_PI;
 
@@ -142,10 +166,9 @@ vector<float> Speed_F_Normal::velocidad_vec_contacto(float current_center_mass_X
     return vectores_contacto;
 }
 
-vector<float> Speed_F_Normal::velocidad(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
+void Speed_F_Normal::velocidad(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
 {
     vector<float> vectores_v_contacto = velocidad_vec_contacto(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
-    vector<float> velocidad_sigma;
 
     // vector velocidad
     float sigma_t_i = (vectores_v_contacto[2] * vectores_v_contacto[0] + vectores_v_contacto[3] * vectores_v_contacto[1]) * vectores_v_contacto[2];
@@ -157,7 +180,7 @@ vector<float> Speed_F_Normal::velocidad(float current_center_mass_X, float curre
     float sigma_n_j = (vectores_v_contacto[4] * vectores_v_contacto[0] + vectores_v_contacto[5] * vectores_v_contacto[1]) * vectores_v_contacto[5];
     velocidad_sigma.push_back(sigma_n_j);
 
-    return velocidad_sigma;
+    //return velocidad_sigma;
 }
 
 float Speed_F_Normal::radio_equivalente()
@@ -210,11 +233,11 @@ float Speed_F_Normal::gamma_t()
     return gama;
 }
 
-float Speed_F_Normal::fuerza_normal(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
+void Speed_F_Normal::fuerza_normal(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
 {
-    vector<float> abs_ = contact.superposition(current_center_mass_X, current_center_mass_Y, vertices_talud);
-    float module = abs_[1];
-    if (abs_[1] < 0)
+    contact.superposition(current_center_mass_X, current_center_mass_Y, vertices_talud);
+    float module = contact.perpendicular.second;
+    if (module < 0)
         module = -module;
 
     float E_star = young_module();
@@ -232,10 +255,10 @@ float Speed_F_Normal::fuerza_normal(float current_center_mass_X, float current_c
     float gama = gamma_n();
     float cn = 2 * gama * sqrt(m_star * k_n);
 
-    vector<float> vector_velocity = velocidad(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
+    velocidad(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
 
-    float cn_sigma_n_i = cn * vector_velocity[2];
-    float cn_sigma_n_j = cn * vector_velocity[3];
+    float cn_sigma_n_i = cn * velocidad_sigma[2];
+    float cn_sigma_n_j = cn * velocidad_sigma[3];
 
     kn_module_i = -kn_module_i;
     kn_module_j = -kn_module_j;
@@ -244,26 +267,24 @@ float Speed_F_Normal::fuerza_normal(float current_center_mass_X, float current_c
 
     FN_i = kn_module_i + cn_sigma_n_i;
     FN_j = kn_module_j + cn_sigma_n_j;
-    float FN = sqrt((FN_i * FN_i) + (FN_j * FN_j));
-
-    return FN;
+    FN = sqrt((FN_i * FN_i) + (FN_j * FN_j));
 }
 
 float Speed_F_Normal::coeficiente_friccion(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
 {
-    float FN = fuerza_normal(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
-    fuerzas << "FN_i : " <<FN_i << " FN_j : " << FN_j << " ";
+    fuerza_normal(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
+    fuerzas << "FN_i : " << FN_i << " FN_j : " << FN_j << " ";
     return mu * FN;
 }
 
-float Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
+void Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
 {
-    vector<float> abs_ = contact.superposition(current_center_mass_X, current_center_mass_Y, vertices_talud);
-    float module = abs_[1];
-    if (abs_[1] < 0)
+    contact.superposition(current_center_mass_X, current_center_mass_Y, vertices_talud);
+    float module = contact.perpendicular.second;
+    if (module < 0)
         module = -module;
 
-    vector<float> vector_velocity = velocidad(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
+    velocidad(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
     vector<float> w = velocidad_vec_contacto(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
     float mu_fn = coeficiente_friccion(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
 
@@ -276,14 +297,14 @@ float Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float curre
 
     float gama = gamma_t();
     float F_tangecial_amortiguadora = 2 * gama * sqrt(m_star * kt);
-    float F_tangecial_amortiguadora_i = F_tangecial_amortiguadora * vector_velocity[0];
-    float F_tangecial_amortiguadora_j = F_tangecial_amortiguadora * vector_velocity[1];
+    float F_tangecial_amortiguadora_i = F_tangecial_amortiguadora * velocidad_sigma[0];
+    float F_tangecial_amortiguadora_j = F_tangecial_amortiguadora * velocidad_sigma[1];
 
     float step_back_i = 0;
     float step_back_j = 0;
 
-    float k_i_t_deltatime_i = kt * draw.h * vector_velocity[0];
-    float k_i_t_deltatime_j = kt * draw.h * vector_velocity[1];
+    float k_i_t_deltatime_i = kt * draw.h * velocidad_sigma[0];
+    float k_i_t_deltatime_j = kt * draw.h * velocidad_sigma[1];
 
     float actual_fuerza_tangencial_resorte_i = k_i_t_deltatime_i + step_back_i;
     float actual_fuerza_tangencial_resorte_j = k_i_t_deltatime_j + step_back_j;
@@ -298,7 +319,7 @@ float Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float curre
     Ft_i = actual_fuerza_tangencial_resorte_i + F_tangecial_amortiguadora_i;
     Ft_j = actual_fuerza_tangencial_resorte_j + F_tangecial_amortiguadora_j;
 
-    float Ft = sqrt((Ft_i * Ft_i) + (Ft_j * Ft_j));
+    Ft = sqrt((Ft_i * Ft_i) + (Ft_j * Ft_j));
 
     float rpta;
 
@@ -307,29 +328,25 @@ float Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float curre
         rpta = mu_fn;
         Ft_i = mu_fn_i;
         Ft_j = mu_fn_j;
-        fuerzas << " Ft_i : " <<Ft_i << " Ft_j : " << Ft_j << endl;
+        fuerzas << " Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
     }
     else
     {
         rpta = Ft;
-        fuerzas << " Ft_i : " <<Ft_i << " Ft_j : " << Ft_j << endl;
+        fuerzas << " Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
     }
-
-    return Ft;
 }
 
-float Speed_F_Normal::momentos(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
+void Speed_F_Normal::momentos(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[])
 {
     vector<float> rc = vectores_rc(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
-    float f_n = fuerza_normal(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
-    float f_t = fuerza_tangencial(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
+    fuerza_normal(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
+    fuerza_tangencial(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);
 
     float f_total_i = FN_i + Ft_i;
     float f_total_j = FN_j + Ft_j;
 
-    float M_G = (rc[0] * f_total_j) - (rc[1] * f_total_i);
-
-    return M_G;
+    M_G = (rc[0] * f_total_j) - (rc[1] * f_total_i);
 }
 
 #endif

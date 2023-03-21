@@ -31,7 +31,7 @@ constexpr unsigned int ROCK_VERTEX_DATA_SIZE = (NUMBER_OF_SECTIONS + 1) * 6;
 constexpr unsigned int ROCK_INDICES_SIZE = NUMBER_OF_SECTIONS * 3;
 
 /*****************************************************************************/
-void transformVertices(float* vertices, int numVertices, const glm::mat4& transform)
+void transformVertices(float *vertices, int numVertices, const glm::mat4 &transform)
 {
     for (int i = 0; i < numVertices + 1; ++i)
     {
@@ -64,6 +64,7 @@ int main()
     gil::Shader gridShader("grid");
 
     std::ofstream output("C:/Users/Usuario/Desktop/hilarios/src/report.txt");
+    std::ofstream rebote("C:/Users/Usuario/Desktop/hilarios/src/report_rebote.txt");
     /*****************************************************************************/
 
     // Initial Setup Stuff
@@ -100,19 +101,17 @@ int main()
 
     // Talud raw data
     float grid_vertex_data[] = {
-        -1.0f,  0.0f, 0.0f,     1.0f,  0.0f, 0.0f,
-        -1.0f,  0.5f, 0.0f,     1.0f,  0.5f, 0.0f,
-         0.5f, -1.0f, 0.0f,     0.5f,  1.0f, 0.0f,
-         0.0f, -1.0f, 0.0f,     0.0f,  1.0f, 0.0f,
-        -0.5f, -1.0f, 0.0f,    -0.5f,  1.0f, 0.0f,
-        -1.0f, -0.5f, 0.0f,     1.0f, -0.5f, 0.0f
-    };
+        -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 0.5f, 0.0f, 1.0f, 0.5f, 0.0f,
+        0.5f, -1.0f, 0.0f, 0.5f, 1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -1.0f, 0.0f, -0.5f, 1.0f, 0.0f,
+        -1.0f, -0.5f, 0.0f, 1.0f, -0.5f, 0.0f};
 
     // Talud raw data
     float talud[SIZE_COORD_GRID * 3];
     float talud_vertex_data[6] = {
-        -1.0f, -0.02f, 0.0f, 1.0f, -0.02f, 0.0f
-    };
+        -1.0f, -0.02f, 0.0f, 1.0f, -0.02f, 0.0f};
 
     /*****************************************************************************/
 
@@ -132,10 +131,10 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_rock);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rock_indices), rock_indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (const void*)(0 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (const void *)(0 * sizeof(float)));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (const void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (const void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -155,7 +154,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO_grid);
     glBufferData(GL_ARRAY_BUFFER, sizeof(grid_vertex_data), grid_vertex_data, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void *)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -174,7 +173,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO_talud);
     glBufferData(GL_ARRAY_BUFFER, sizeof(talud_vertex_data), talud_vertex_data, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void *)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -188,7 +187,7 @@ int main()
     vector<float> vy_array;
     vector<float> theta_array;
 
-    PuntoContacto inter(elipse);
+    PuntoContacto point(elipse);
     Speed_F_Normal speed(elipse);
 
     RungeKutta rk(vx, vy, theta, elipse, speed);
@@ -197,7 +196,8 @@ int main()
     int n = vx_array.size();
 
     int pos = 1;
-    //gil::Timer timer(true);
+    rebote << " \t (Xd,Yd) \t\t\t\t\t Sig_n \t\t\t\t D_Sig_n \t\t\t D_Sig_t \t\t Fn \t\t Ft \t\t Mg \t" << endl;
+    gil::Timer timer(true);
     while (window.isActive())
     {
         // Pre Tick calls
@@ -232,39 +232,42 @@ int main()
             transformVertices(outvertices, NUMBER_OF_SECTIONS, transform);
             for (int i = 0; i < NUMBER_OF_SECTIONS + 1; ++i)
             {
-                output << "Vertex " << i << ": (" <<
-                (outvertices[i * 6 + 0] * scale) << ", " <<
-                (outvertices[i * 6 + 1] * scale) << ", " <<
-                (outvertices[i * 6 + 2] * scale) << ")" << std::endl;
+                output << "Vertex " << i << ": (" << (outvertices[i * 6 + 0] * scale) << ", " << (outvertices[i * 6 + 1] * scale) << ", " << (outvertices[i * 6 + 2] * scale) << ")" << std::endl;
             }
 
             // Evaluar cada movimiento para ver si esta viajando
             // funcion(rescatar centro de masa)
             float centro_masa_X = outvertices[0];
             float centro_masa_Y = outvertices[1];
-            float current_velocity_X = vx_array[pos]; 
+            float current_velocity_X = vx_array[pos];
             float current_velocity_Y = vy_array[pos];
-            //cout << centro_masa_X * scale << " " << centro_masa_Y * scale << endl;
+            // cout << centro_masa_X * scale << " " << centro_masa_Y * scale << endl;
 
-            inter.superposition(centro_masa_X , centro_masa_Y , talud_vertex_data);
-            if (inter.collision == true)
+            point.superposition(centro_masa_X, centro_masa_Y, talud_vertex_data);
+            if (point.collision == true)
             {
-                cout<<current_velocity_X << " "<<current_velocity_Y << " " << angle<< endl;
-                // Calcula las fuerzas para el rebote
-                speed.momentos(centro_masa_X , centro_masa_Y , current_velocity_X , current_velocity_Y , angle, talud_vertex_data);
-                return 0;
+                // cout<<current_velocity_X << " "<<current_velocity_Y << " " << angle<< endl;
+                //  Calcula las fuerzas para el rebote
+                speed.momentos(centro_masa_X, centro_masa_Y, current_velocity_X, current_velocity_Y, angle, talud_vertex_data);
+                rebote << "(" << centro_masa_X            << ","  << centro_masa_Y              << ") \t ("  <<
+                                point.perpendicular.first << "\t" << point.perpendicular.second << ") \t ("  << 
+                                speed.velocidad_sigma[2]  << "i " << speed.velocidad_sigma[3]   << "j) \t (" <<
+                                speed.velocidad_sigma[0]  << "i " << speed.velocidad_sigma[1]   << "j) \t\t "  <<
+                                speed.FN                  << "\t" << speed.Ft << "\t"           << "\t "     <<speed.M_G << endl;
+
+                // return 0;
 
                 // Iran las funciones que haran que la elipse rebote
-                
-                //calcular de nuevo Rk
+
+                // calcular de nuevo Rk
                 /*while(current_velocity_X != 0 && current_velocity_Y != 0)
                 {
-                    
+
                 }*/
             }
 
             // Incremento para ver fotogramas
-            pos+=1;
+            pos += 1;
         }
         else
         {
@@ -286,11 +289,11 @@ int main()
         rockShader.use();
         rockShader.setMat4("transform", transform);
         glBindVertexArray(VAO_rock);
-        glDrawElements(GL_TRIANGLES, ROCK_VERTEX_DATA_SIZE, GL_UNSIGNED_INT, (const void*)0);
+        glDrawElements(GL_TRIANGLES, ROCK_VERTEX_DATA_SIZE, GL_UNSIGNED_INT, (const void *)0);
 
         // Post Tick Calls
         window.swapBuffers();
-        //timer.tick();
+        timer.tick();
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
