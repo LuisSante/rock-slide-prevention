@@ -16,7 +16,7 @@ private:
     float vx0 = 0.0f;
     float vy0 = 0.0f;
     float theta0 = 0.0f;
-    float h = 1.0f;
+    float h = 0.1f;
     float w = 0.2f;
     float t0 = 0.0f;
     float tf = 20.0f;

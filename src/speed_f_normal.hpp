@@ -315,7 +315,6 @@ void Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float curren
     F_tangecial_amortiguadora_i = -F_tangecial_amortiguadora_i;
     F_tangecial_amortiguadora_j = -F_tangecial_amortiguadora_j;
 
-    // PROBLEMA ESTA AQUI
     Ft_i = actual_fuerza_tangencial_resorte_i + F_tangecial_amortiguadora_i;
     Ft_j = actual_fuerza_tangencial_resorte_j + F_tangecial_amortiguadora_j;
 
@@ -328,12 +327,12 @@ void Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float curren
         rpta = mu_fn;
         Ft_i = mu_fn_i;
         Ft_j = mu_fn_j;
-        fuerzas << " Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
+        //fuerzas << " Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
     }
     else
     {
         rpta = Ft;
-        fuerzas << " Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
+        //fuerzas << " Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
     }
 }
 

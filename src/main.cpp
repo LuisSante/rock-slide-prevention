@@ -111,7 +111,7 @@ int main()
     // Talud raw data
     float talud[SIZE_COORD_GRID * 3];
     float talud_vertex_data[6] = {
-        -1.0f, -0.02f, 0.0f, 1.0f, -0.02f, 0.0f};
+        0.5f, -0.02f, 0.0f, 1.0f, -0.02f, 0.0f};
 
     /*****************************************************************************/
 
@@ -255,7 +255,7 @@ int main()
                                 speed.velocidad_sigma[0]  << "i " << speed.velocidad_sigma[1]   << "j) \t\t "  <<
                                 speed.FN                  << "\t" << speed.Ft << "\t"           << "\t "     <<speed.M_G << endl;
 
-                // return 0;
+                //return 0;
 
                 // Iran las funciones que haran que la elipse rebote
 
