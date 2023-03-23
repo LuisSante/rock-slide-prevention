@@ -54,9 +54,9 @@ public:
         this->Fnormal.second = 0.0f;
         this->Ftangencial.first = 0.0f;
         this->Ftangencial.second = 0.0f;
-        this->FN = FN;
-        this->Ft = Ft;
-        this->M_G = M_G;
+        this->FN = 0;
+        this->Ft = 0;
+        this->M_G = 0;
 
         for (int i = 0; i < velocidad_sigma.size(); i++)
         {

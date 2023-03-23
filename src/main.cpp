@@ -222,7 +222,6 @@ int main()
         if (i < tf / h)
         {
             t = t0 + i * h;
-            cout << "M_G : " << speed.M_G << endl;
             rk.runge_kutta(vx, vy, Xd, Yd, theta, w, speed.M_G, h, t, i, speed.Fnormal, speed.Ftangencial);
             transform = glm::translate(transform, glm::vec3(Xd / scale, Yd / scale, 0.0f));
             cout << transform[0][4] << " " <<transform[1][4] << endl;

@@ -34,7 +34,7 @@ public:
     pair<float , float> perpendicular; // Sigma n
 
     PuntoContacto();
-    PuntoContacto(Draw draw);
+    PuntoContacto(Draw &draw);
     void imprimir_matriz(float matriz[2][2]);
     bool descomposicion_LU(float matriz[2][2], int dimension, float L[2][2], float U[2][2]);
     bool resolver_sistema(float L[2][2], float U[2][2], float b[2], int dimension, float x[2]);
@@ -60,7 +60,7 @@ PuntoContacto::PuntoContacto()
     bl = 0;*/
 }
 
-PuntoContacto::PuntoContacto(Draw draw) : draw(draw)
+PuntoContacto::PuntoContacto(Draw &draw) : draw(draw)
 {
     for (int i = 0; i < 6; i++)
     {
