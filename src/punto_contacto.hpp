@@ -20,14 +20,14 @@ class PuntoContacto
 private:
     Draw draw;
     int dimension = 2;
-    float theta_talud = 0.0f * 3.1416f / 180.0f;
+    float theta_talud = 10.0f * 3.1416f / 180.0f;
     float matriz_angulos[2][2] = {{cos(theta_talud), -sin(theta_talud)}, {sin(theta_talud), cos(theta_talud)}};
     float vertices_resta[6];
     float vertices_locales_talud[6];
     float inversa[2][2];
 
 public:
-    bool collision;
+    bool collision = false;
     pair<float , float> perpendicular; // Sigma n
 
     PuntoContacto();
@@ -50,7 +50,7 @@ PuntoContacto::PuntoContacto()
         vertices_locales_talud[i] = 0;
     }
 
-    collision = false;
+    //collision = false;
     perpendicular.first = 0.0f;
     perpendicular.second = 0.0f;
     /*ml = 0;
@@ -64,7 +64,7 @@ PuntoContacto::PuntoContacto(Draw draw) : draw(draw)
         vertices_resta[i] = 0;
         vertices_locales_talud[i] = 0;
     }
-    collision = false;
+    //collision = false;
     perpendicular.first = 0.0f;
     perpendicular.second = 0.0f;
 }
@@ -299,14 +299,14 @@ vector<float> PuntoContacto::machine(float current_center_mass_X, float current_
         s1 = (-e_b + raizdiscriminant) / (2 * e_a);
         s2 = (-e_b - raizdiscriminant) / (2 * e_a);
         collision = true;
-        // cout << "CHOCO AL FIN" << endl;
+        //cout << "CHOCO AL FIN" << endl;
     }
     else
     {
         parteReal = -e_b / (2 * e_a);
         parteImaginaria = raizdiscriminant / (2 * e_a);
         collision = false;
-        // cout << "No hay interseccion" << endl;
+        //cout << "No hay interseccion" << endl;
     }
 
     // raices
@@ -386,14 +386,6 @@ void PuntoContacto::superposition(float current_center_mass_X, float current_cen
 
     perpendicular.first = per_1;
     perpendicular.second = per_2;
-
-    /*cout << "FUNCION PARA LA SUPERPOSICION: DISTANCIAS PERPENDICULARES" << endl;
-    for (int i = 0; i < distance_perpendicular.size(); i++)
-    {
-        cout << distance_perpendicular[i] << " ";
-    }
-    cout << endl
-         << endl;*/
 }
 
 #endif

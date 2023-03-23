@@ -21,20 +21,6 @@ private:
     float Yd = 0.0f;
     int number_of_sections = 0;
 
-    // RK
-    float vx0 = 0.0f;
-    float vy0 = 0.0f;
-    float theta0 = 0.0f;
-    float h = 1.0f;
-    float w = 0.2f;
-    float t0 = 0.0f;
-    float tf = 20.0f;
-    float masa = 120.0f;
-    float fuerza = 0.0f;
-    const float g = 9.81f;
-    float MG = 0.0f;
-    float I = 0.0f;
-
     //fuerzas externas
 
 public:
@@ -60,11 +46,7 @@ Draw::Draw()
     Yd = 0.0f;
     a = 0.0f;
     b = 0.0f;
-
     number_of_sections = 0;
-
-    I = 0.0f;
-    n = 0;
 };
 
 Draw::Draw(float Xd, float Yd, float a, float b, int number_of_sections)
@@ -73,13 +55,8 @@ Draw::Draw(float Xd, float Yd, float a, float b, int number_of_sections)
     this->Yd = Yd;
     this->a = a;
     this->b = b;
-    /*this->vx0 = vx0;
-    this->vy0 = vy0;
-    this->theta0 = theta0;*/
     this->number_of_sections = number_of_sections;
 
-    I = masa * (a * b) * (a * a + b * b) / 4.0f;
-    n = (tf - t0) / h;
 }
 
 float Draw::degrees_to_radians(float angulo)

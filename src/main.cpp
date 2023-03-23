@@ -8,6 +8,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <utility>
 
 #include <cmath>
 #include <cstdio>
@@ -21,8 +22,8 @@
 using std::vector;
 
 // Window Size Settings
-constexpr unsigned int SCR_WIDTH = 4000;
-constexpr unsigned int SCR_HEIGHT = 4000;
+constexpr unsigned int SCR_WIDTH = 1000;
+constexpr unsigned int SCR_HEIGHT = 1000;
 
 constexpr unsigned int SIZE_COORD_GRID = 4;
 
@@ -63,8 +64,8 @@ int main()
     gil::Shader taludShader("talud");
     gil::Shader gridShader("grid");
 
-    std::ofstream output("C:/Users/Usuario/Desktop/hilarios/src/report.txt");
-    std::ofstream rebote("C:/Users/Usuario/Desktop/hilarios/src/report_rebote.txt");
+    std::ofstream output("C:/Users/Usuario/Desktop/hilarios/src/reportes/report.txt");
+    std::ofstream rebote("C:/Users/Usuario/Desktop/hilarios/src/reportes/report_rebote.txt");
     /*****************************************************************************/
 
     // Initial Setup Stuff
@@ -75,8 +76,8 @@ int main()
     // Non-sacled origin => Scaled origin
     float origen_x = 0.0f;
     float origen_y = 0.0f;
-    float Xd = origen_x / scale;
-    float Yd = origen_y / scale;
+    float Xd = origen_x;
+    float Yd = origen_y;
 
     // Non-scaled radius => Scaled radius
     float radio_mayor = 20.0f;
@@ -111,7 +112,7 @@ int main()
     // Talud raw data
     float talud[SIZE_COORD_GRID * 3];
     float talud_vertex_data[6] = {
-        0.5f, -0.02f, 0.0f, 1.0f, -0.02f, 0.0f};
+        0.69f, 0.07f, 0.0f, 0.3f, 0.0f, 0.0f};
 
     /*****************************************************************************/
 
@@ -181,22 +182,27 @@ int main()
 
     /*****************************************************************************/
 
-    vector<float> x_array;
-    vector<float> y_array;
-    vector<float> vx_array;
-    vector<float> vy_array;
-    vector<float> theta_array;
+    rebote << " \t (Xd,Yd) \t\t\t\t\t Sig_n \t\t\t\t D_Sig_n \t\t\t D_Sig_t \t\t\t\t Fn \t\t Ft \t\t Mg \t" << endl;
+
+    float t0 = 0.0f;
+    float tf = 20.0f;
+    float MG = 0.0f;
+    float w = 0.2f;
+    const float h = 1.0f;
+
+    float current_velocity_x = vx;
+    float current_velocity_y = vy;
+    // float traslate_X = Xd;
+    // float traslate_Y = Yd;
+
+    int i = 0;
+    float t = 0.0f;
 
     PuntoContacto point(elipse);
     Speed_F_Normal speed(elipse);
 
-    RungeKutta rk(vx, vy, theta, elipse, speed);
-    rk.runge_kutta(x_array, y_array, vx_array, vy_array, theta_array);
+    RungeKutta rk(elipse);
 
-    int n = vx_array.size();
-
-    int pos = 1;
-    rebote << " \t (Xd,Yd) \t\t\t\t\t Sig_n \t\t\t\t D_Sig_n \t\t\t D_Sig_t \t\t Fn \t\t Ft \t\t Mg \t" << endl;
     gil::Timer timer(true);
     while (window.isActive())
     {
@@ -214,15 +220,21 @@ int main()
 
         // Rendering Stuff
         glm::mat4 transform = glm::mat4(1.0f);
-        if (pos < n)
-        {
-            output << "Angle: " << theta_array[pos] << endl;
 
-            float traslate_X = x_array[pos] / scale;
-            float traslate_Y = y_array[pos] / scale;
-            float angle = theta_array[pos];
+        if (i < tf / h)
+        {
+            t = t0 + i * h;
+            rk.runge_kutta(vx, vy, Xd, Yd, theta, w, MG, h, t, i, speed.Fnormal, speed.Ftangencial);
+
+            float traslate_X = Xd / scale;
+            float traslate_Y = Yd / scale;
+
+            cout << " Xd " << traslate_X << " Yd " << traslate_Y << endl;
+
             transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
-            transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            transform = glm::rotate(transform, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
+
+            // cout << traslate_X <<" "<< traslate_Y <<"\t" << theta << endl;
 
             // Impresion de vertices para reporte
             // Rescatar el centro de masa
@@ -230,53 +242,54 @@ int main()
             memcpy(outvertices, rock_vertex_data, sizeof(rock_vertex_data));
 
             transformVertices(outvertices, NUMBER_OF_SECTIONS, transform);
+            output << theta << endl;
             for (int i = 0; i < NUMBER_OF_SECTIONS + 1; ++i)
             {
-                output << "Vertex " << i << ": (" << (outvertices[i * 6 + 0] * scale) << ", " << (outvertices[i * 6 + 1] * scale) << ", " << (outvertices[i * 6 + 2] * scale) << ")" << std::endl;
+                output << "Vertex " << i << ": (" << (outvertices[i * 6 + 0] * scale) << ", " << (outvertices[i * 6 + 1] * scale) << ", " << (outvertices[i * 6 + 2] * scale) << ")" << endl;
             }
+            output << endl
+                   << endl;
 
-            // Evaluar cada movimiento para ver si esta viajando
-            // funcion(rescatar centro de masa)
-            float centro_masa_X = outvertices[0];
-            float centro_masa_Y = outvertices[1];
-            float current_velocity_X = vx_array[pos];
-            float current_velocity_Y = vy_array[pos];
-            // cout << centro_masa_X * scale << " " << centro_masa_Y * scale << endl;
+            float center_mass_X = outvertices[0];
+            float center_mass_Y = outvertices[1];
 
-            point.superposition(centro_masa_X, centro_masa_Y, talud_vertex_data);
+            point.superposition(center_mass_X, center_mass_Y, talud_vertex_data);
+
             if (point.collision == true)
             {
-                // cout<<current_velocity_X << " "<<current_velocity_Y << " " << angle<< endl;
-                //  Calcula las fuerzas para el rebote
-                speed.momentos(centro_masa_X, centro_masa_Y, current_velocity_X, current_velocity_Y, angle, talud_vertex_data);
-                rebote << "(" << centro_masa_X            << ","  << centro_masa_Y              << ") \t ("  <<
-                                point.perpendicular.first << "\t" << point.perpendicular.second << ") \t ("  << 
-                                speed.velocidad_sigma[2]  << "i " << speed.velocidad_sigma[3]   << "j) \t (" <<
-                                speed.velocidad_sigma[0]  << "i " << speed.velocidad_sigma[1]   << "j) \t\t "  <<
-                                speed.FN                  << "\t" << speed.Ft << "\t"           << "\t "     <<speed.M_G << endl;
+                speed.momentos(center_mass_X, center_mass_Y, vx, vy, theta, h, talud_vertex_data);
+                cout << speed.Fnormal.first << " " << speed.Fnormal.second << " " << speed.Ftangencial.first << " " << speed.Ftangencial.second << endl;
 
-                //return 0;
-
-                // Iran las funciones que haran que la elipse rebote
-
-                // calcular de nuevo Rk
-                /*while(current_velocity_X != 0 && current_velocity_Y != 0)
-                {
-
-                }*/
+                rebote << "(" << Xd << "," << Yd << ") \t (" << point.perpendicular.first * scale << "\t" << point.perpendicular.second * scale << ") \t (" << speed.velocidad_sigma[2] << " i " << speed.velocidad_sigma[3] << " j) \t (" << speed.velocidad_sigma[0] << " i " << speed.velocidad_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
+                       << "\t " << speed.M_G << endl;
+                // rk.runge_kutta(vx, vy, traslate_X , traslate_Y , theta , w , MG , h , t , i);
+                MG = speed.M_G;
+                // return 0;
             }
-
-            // Incremento para ver fotogramas
-            pos += 1;
         }
+
         else
         {
-            float traslate_X = x_array[n - 1] / scale;
-            float traslate_Y = y_array[n - 1] / scale;
-            float angle = theta_array[n - 1];
-            transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
-            transform = glm::rotate(transform, (float)angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            t = t0 + i * h;
+            rk.runge_kutta(vx, vy, Xd, Yd, theta, w, MG, h, t, i, speed.Fnormal, speed.Ftangencial);
+
+            transform = glm::translate(transform, glm::vec3(Xd / scale, Yd / scale, 0.0f));
+            transform = glm::rotate(transform, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
+
+            /*if (point.collision == true)
+            {
+                speed.momentos(vertices[0], vertices[1], vx, vy, theta, h, talud_vertex_data);
+                cout << speed.Fnormal.first << " " << speed.Fnormal.second << " " << speed.Ftangencial.first << " " << speed.Ftangencial.second << endl;
+
+                rebote << "(" << Xd << "," << Yd << ") \t (" << point.perpendicular.first * scale << "\t" << point.perpendicular.second * scale << ") \t (" << speed.velocidad_sigma[2] << " i " << speed.velocidad_sigma[3] << " j) \t (" << speed.velocidad_sigma[0] << " i " << speed.velocidad_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
+                       << "\t " << speed.M_G << endl;
+                // rk.runge_kutta(vx, vy, traslate_X , traslate_Y , theta , w , MG , h , t , i);
+                MG = speed.M_G;
+                // return 0;
+            }*/
         }
+
+        i++;
 
         gridShader.use();
         glBindVertexArray(VAO_grid);
@@ -294,6 +307,8 @@ int main()
         // Post Tick Calls
         window.swapBuffers();
         timer.tick();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);

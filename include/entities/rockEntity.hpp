@@ -2,7 +2,7 @@
 
 #include <entities/entity.hpp>
 
-class RockEntity : public Entity
+class RockEntity : public Entity2D
 {
 public:
     RockEntity();
