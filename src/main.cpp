@@ -22,8 +22,8 @@
 using std::vector;
 
 // Window Size Settings
-constexpr unsigned int SCR_WIDTH = 1000;
-constexpr unsigned int SCR_HEIGHT = 1000;
+constexpr unsigned int SCR_WIDTH = 4000;
+constexpr unsigned int SCR_HEIGHT = 4000;
 
 constexpr unsigned int SIZE_COORD_GRID = 4;
 
@@ -74,19 +74,21 @@ int main()
     float scale = 3500.0f;
 
     // Non-sacled origin => Scaled origin
-    float origen_x = 0.0f;
-    float origen_y = 0.0f;
-    float Xd = origen_x;
-    float Yd = origen_y;
+    float Xd = 0.0f ;
+    float Yd = 0.0f;
+
+    // Begin Point 
+    float inicio_x = 0.0f;
+    float inicio_y = 0.5f;
 
     // Non-scaled radius => Scaled radius
-    float radio_mayor = 20.0f;
-    float radio_menor = 15.0f;
+    float radio_mayor = 40.0f;
+    float radio_menor = 30.0f;
     float a = radio_mayor / scale;
     float b = radio_menor / scale;
 
     // Rock Computing Utils [Runge Kutta]
-    float vx = 155.9f;
+    float vx = 70.9f;
     float vy = 90.0f;
     float theta = 0.0f * M_PI / 180.0f;
     Draw elipse(Xd, Yd, a, b, NUMBER_OF_SECTIONS);
@@ -112,7 +114,7 @@ int main()
     // Talud raw data
     float talud[SIZE_COORD_GRID * 3];
     float talud_vertex_data[6] = {
-        0.69f, 0.07f, 0.0f, 0.3f, 0.0f, 0.0f};
+        0.7f, 0.0f, 0.0f, 0.0f, 0.41f, 0.0f};
 
     /*****************************************************************************/
 
@@ -182,18 +184,13 @@ int main()
 
     /*****************************************************************************/
 
-    rebote << " \t (Xd,Yd) \t\t\t\t\t Sig_n \t\t\t\t D_Sig_n \t\t\t D_Sig_t \t\t\t\t Fn \t\t Ft \t\t Mg \t" << endl;
+    rebote << " Segundo de impacto \t (Xd,Yd) \t\t\t\t\t Sig_n \t\t\t\t D_Sig_n \t\t\t D_Sig_t \t\t\t\t Fn \t\t Ft \t\t Mg \t" << endl;
 
     float t0 = 0.0f;
     float tf = 20.0f;
     float MG = 0.0f;
     float w = 0.2f;
-    const float h = 1.0f;
-
-    float current_velocity_x = vx;
-    float current_velocity_y = vy;
-    // float traslate_X = Xd;
-    // float traslate_Y = Yd;
+    const float h = 0.01f;
 
     int i = 0;
     float t = 0.0f;
@@ -220,28 +217,24 @@ int main()
 
         // Rendering Stuff
         glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, glm::vec3(inicio_x, inicio_y, 0.0f));
 
         if (i < tf / h)
         {
             t = t0 + i * h;
-            rk.runge_kutta(vx, vy, Xd, Yd, theta, w, MG, h, t, i, speed.Fnormal, speed.Ftangencial);
-
-            float traslate_X = Xd / scale;
-            float traslate_Y = Yd / scale;
-
-            cout << " Xd " << traslate_X << " Yd " << traslate_Y << endl;
-
-            transform = glm::translate(transform, glm::vec3(traslate_X, traslate_Y, 0.0f));
+            cout << "M_G : " << speed.M_G << endl;
+            rk.runge_kutta(vx, vy, Xd, Yd, theta, w, speed.M_G, h, t, i, speed.Fnormal, speed.Ftangencial);
+            transform = glm::translate(transform, glm::vec3(Xd / scale, Yd / scale, 0.0f));
+            cout << transform[0][4] << " " <<transform[1][4] << endl;
             transform = glm::rotate(transform, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
 
-            // cout << traslate_X <<" "<< traslate_Y <<"\t" << theta << endl;
 
             // Impresion de vertices para reporte
             // Rescatar el centro de masa
             float outvertices[ROCK_VERTEX_DATA_SIZE];
             memcpy(outvertices, rock_vertex_data, sizeof(rock_vertex_data));
-
             transformVertices(outvertices, NUMBER_OF_SECTIONS, transform);
+
             output << theta << endl;
             for (int i = 0; i < NUMBER_OF_SECTIONS + 1; ++i)
             {
@@ -250,21 +243,22 @@ int main()
             output << endl
                    << endl;
 
+            // aqui se le pasa un centro de masa transformados (MC)
             float center_mass_X = outvertices[0];
             float center_mass_Y = outvertices[1];
+
+            //cout << "Centro de masa (" <<center_mass_X << " , " << center_mass_Y << ")"<< endl;
+            //cout << "TALUD " << talud_vertex_data[0] << " " << talud_vertex_data[1] << " " << talud_vertex_data[3] << " " << talud_vertex_data[4] <<endl<<endl;
 
             point.superposition(center_mass_X, center_mass_Y, talud_vertex_data);
 
             if (point.collision == true)
             {
+                return 0;
                 speed.momentos(center_mass_X, center_mass_Y, vx, vy, theta, h, talud_vertex_data);
-                cout << speed.Fnormal.first << " " << speed.Fnormal.second << " " << speed.Ftangencial.first << " " << speed.Ftangencial.second << endl;
 
-                rebote << "(" << Xd << "," << Yd << ") \t (" << point.perpendicular.first * scale << "\t" << point.perpendicular.second * scale << ") \t (" << speed.velocidad_sigma[2] << " i " << speed.velocidad_sigma[3] << " j) \t (" << speed.velocidad_sigma[0] << " i " << speed.velocidad_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
+                rebote << t << "\t\t\t\t\t(" << Xd / scale << "," << Yd / scale << ") \t (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t (" << speed.velocidad_sigma[2] << " i " << speed.velocidad_sigma[3] << " j) \t (" << speed.velocidad_sigma[0] << " i " << speed.velocidad_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
                        << "\t " << speed.M_G << endl;
-                // rk.runge_kutta(vx, vy, traslate_X , traslate_Y , theta , w , MG , h , t , i);
-                MG = speed.M_G;
-                // return 0;
             }
         }
 
@@ -308,7 +302,7 @@ int main()
         window.swapBuffers();
         timer.tick();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);

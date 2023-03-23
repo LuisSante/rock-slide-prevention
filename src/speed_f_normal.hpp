@@ -48,7 +48,7 @@ public:
     float M_G;
 
     Speed_F_Normal();
-    Speed_F_Normal(Draw draw) : draw(draw), contact(draw)
+    Speed_F_Normal(Draw &draw) : draw(draw), contact(draw)
     {
         this->Fnormal.first = 0.0f;
         this->Fnormal.second = 0.0f;
@@ -188,11 +188,9 @@ float Speed_F_Normal::radio_equivalente()
 {
     float Aprima = 0, Bprima = 0;
     float r_star;
-    /*Aprima = 0.5 * ((0.5 * (1 / draw.a + 1 / draw.b) + 0.25 * (1 / draw.a - 1 / draw.b)));
-    Bprima = 0.5 * ((0.5 * (1 / draw.a + 1 / draw.b) - 0.25 * (1 / draw.a + 1 / draw.b)));*/
 
-    Aprima = 0.5f * (1 / (draw.a * 3500));
-    Bprima = 0.5f * (1 / (draw.b * 3500));
+    Aprima = 0.5f * (1 / (draw.a ));
+    Bprima = 0.5f * (1 / (draw.b ));
 
     r_star = 1 / (2 * sqrt(Aprima * Bprima));
 
@@ -239,7 +237,7 @@ void Speed_F_Normal::fuerza_normal(float current_center_mass_X, float current_ce
     contact.superposition(current_center_mass_X, current_center_mass_Y, vertices_talud);
     float module = contact.perpendicular.second;
     if (module < 0)
-        module = -module * 3500;
+        module = -module;
 
     float E_star = young_module();
     float r_star = radio_equivalente();
@@ -294,7 +292,7 @@ void Speed_F_Normal::fuerza_tangencial(float current_center_mass_X, float curren
     contact.superposition(current_center_mass_X, current_center_mass_Y, vertices_talud);
     float module = contact.perpendicular.second;
     if (module < 0)
-        module = -module * 3500;
+        module = -module;
 
     velocidad(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud); /*sigma_point[2]i y sigma_point[3]j pos*/
     vector<float> w = velocidad_vec_contacto(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertices_talud);

@@ -15,11 +15,11 @@ using std::vector;
 class Draw
 {
 private:
-    float a = 0.0f;
-    float b = 0.0f;
-    float Xd = 0.0f;
-    float Yd = 0.0f;
-    int number_of_sections = 0;
+    float a;
+    float b;
+    float Xd;
+    float Yd;
+    int number_of_sections;
 
     //fuerzas externas
 

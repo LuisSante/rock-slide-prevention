@@ -25,7 +25,7 @@ private:
 
 public:
     RungeKutta();
-    RungeKutta(Draw draw);
+    RungeKutta(Draw &draw);
 
     // sumatoria de fuerzas
     float Fx(float Fni, float Fti);
@@ -42,25 +42,26 @@ RungeKutta::RungeKutta() : draw()
     I = 0;
 };
 
-RungeKutta::RungeKutta(Draw draw) : draw(draw)
+RungeKutta::RungeKutta(Draw &draw) : draw(draw)
 {
-    I = masa * (draw.a * draw.b) * (draw.a * draw.a + draw.b * draw.b) / 4.0f;
+    I = masa * ((draw.a * draw.b) * (draw.a * draw.a + draw.b * draw.b)) / 4.0f;
+    cout << "Inercia "<< I << endl;
 }
 
 // Funciones para calcular las fuerzas en x e y
 float RungeKutta::Fx(float Fni, float Fti)
 {
     float fx = (Fni + Fti + 0) / masa;
-    /*cout << "CLASE RK "
-         << "FN_i : " << speed.FN_i << " Ft_i : " << speed.Ft_i << endl;*/
+    //cout << "CLASE RK "
+    //    << "FN_i : " << Fni << " Ft_i : " << Fti << " Fx : " << fx <<endl;
     return fx;
 }
 
 float RungeKutta::Fy(float Fnj, float Ftj)
 {
     float fy = (Fnj + Ftj + (-masa * g)) / masa;
-    /*cout << "CLASE RK "
-         << "FN_j : " << speed.FN_j << " Ft_j : " << speed.Ft_j << endl;*/
+    //cout << "CLASE RK "
+    //     << "FN_j : " << Fnj << " Ft_j : " << Ftj << " Fy : " << fy <<endl;
     return fy;
 }
 
@@ -73,7 +74,7 @@ void RungeKutta::runge_kutta(float &velocity_x, float &velocity_y, float &positi
     float derivada_w = MG / I;
 
     // float t = t0 + i * h;
-    Frame_Rk << t << " " << velocity_x << " " << velocity_y << " " << position_x << " " << position_y << " " << theta << endl;
+    Frame_Rk << t << " " << position_x << " " << position_y << " " << velocity_x << " " << velocity_y << " " << theta << endl;
 
     k1vx = Fx(Fn.first, Ft.first);
     k1vy = Fy(Fn.second, Ft.second);

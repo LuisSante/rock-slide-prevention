@@ -5,6 +5,7 @@
 #include <vector>
 #include <iomanip>
 #include <utility>
+#include <fstream>
 
 #include <cmath>
 
@@ -15,19 +16,21 @@ using namespace std;
 
 constexpr int MAX_DIMENSION = 100;
 
+std::ofstream impacto("C:/Users/Usuario/Desktop/hilarios/src/reportes/impacto.txt");
+
 class PuntoContacto
 {
 private:
     Draw draw;
     int dimension = 2;
-    float theta_talud = 10.0f * 3.1416f / 180.0f;
+    float theta_talud = 30.0f * 3.1416f / 180.0f;
     float matriz_angulos[2][2] = {{cos(theta_talud), -sin(theta_talud)}, {sin(theta_talud), cos(theta_talud)}};
     float vertices_resta[6];
     float vertices_locales_talud[6];
     float inversa[2][2];
 
 public:
-    bool collision = false;
+    bool collision;
     pair<float , float> perpendicular; // Sigma n
 
     PuntoContacto();
@@ -50,7 +53,7 @@ PuntoContacto::PuntoContacto()
         vertices_locales_talud[i] = 0;
     }
 
-    //collision = false;
+    collision = false;
     perpendicular.first = 0.0f;
     perpendicular.second = 0.0f;
     /*ml = 0;
@@ -64,7 +67,7 @@ PuntoContacto::PuntoContacto(Draw draw) : draw(draw)
         vertices_resta[i] = 0;
         vertices_locales_talud[i] = 0;
     }
-    //collision = false;
+    collision = false;
     perpendicular.first = 0.0f;
     perpendicular.second = 0.0f;
 }
@@ -281,32 +284,35 @@ vector<float> PuntoContacto::machine(float current_center_mass_X, float current_
     float ml = (draw.a / draw.b) * ((medio_locales[3] - medio_locales[1]) / (medio_locales[2] - medio_locales[0]));
     float bl = (medio_locales[1] / draw.b) - (ml * (medio_locales[0] / draw.a));
 
+
     medio.push_back(ml);
     medio.push_back(bl);
 
-    // ecuacion cuadrativa
+    // ecuacion cuadratica
     double e_a = ((ml * ml) + 1);
     double e_b = 2 * ml * bl;
     double e_c = ((bl * bl) - 1);
 
     double s1 = 0, s2 = 0;
     double discriminant = (e_b * e_b) - 4 * e_a * e_c;
-    double raizdiscriminant = sqrt(abs(discriminant));
+        double raizdiscriminant = sqrt(abs(discriminant));
     float parteReal = 0.0f, parteImaginaria = 0.0f;
+
+    impacto << "Discriminante : "<<discriminant << endl;
 
     if (discriminant > 0 || discriminant == 0)
     {
         s1 = (-e_b + raizdiscriminant) / (2 * e_a);
         s2 = (-e_b - raizdiscriminant) / (2 * e_a);
         collision = true;
-        //cout << "CHOCO AL FIN" << endl;
+        //impacto << "Interseccion" << endl;
     }
     else
     {
         parteReal = -e_b / (2 * e_a);
         parteImaginaria = raizdiscriminant / (2 * e_a);
         collision = false;
-        //cout << "No hay interseccion" << endl;
+        //impacto << "No hay interseccion" << endl;
     }
 
     // raices
