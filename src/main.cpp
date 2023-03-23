@@ -75,15 +75,15 @@ int main()
 
     // Non-sacled origin => Scaled origin
     float Xd = 0.0f ;
-    float Yd = 0.0f;
+    float Yd = 0.5f;
 
     // Begin Point 
     float inicio_x = 0.0f;
-    float inicio_y = 0.5f;
+    float inicio_y = 0.0f;
 
     // Non-scaled radius => Scaled radius
-    float radio_mayor = 40.0f;
-    float radio_menor = 30.0f;
+    float radio_mayor = 20.0f;
+    float radio_menor = 15.0f;
     float a = radio_mayor / scale;
     float b = radio_menor / scale;
 
@@ -190,7 +190,7 @@ int main()
     float tf = 20.0f;
     float MG = 0.0f;
     float w = 0.2f;
-    const float h = 0.01f;
+    const float h = 1.0f;
 
     int i = 0;
     float t = 0.0f;
@@ -253,11 +253,12 @@ int main()
 
             if (point.collision == true)
             {
-                return 0;
                 speed.momentos(center_mass_X, center_mass_Y, vx, vy, theta, h, talud_vertex_data);
 
                 rebote << t << "\t\t\t\t\t(" << Xd / scale << "," << Yd / scale << ") \t (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t (" << speed.velocidad_sigma[2] << " i " << speed.velocidad_sigma[3] << " j) \t (" << speed.velocidad_sigma[0] << " i " << speed.velocidad_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
                        << "\t " << speed.M_G << endl;
+            
+                return 0;
             }
         }
 
@@ -301,7 +302,7 @@ int main()
         window.swapBuffers();
         timer.tick();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(600));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
