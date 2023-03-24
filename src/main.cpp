@@ -74,16 +74,19 @@ int main()
     float scale = 3500.0f;
 
     // Non-sacled origin => Scaled origin
-    float Xd = 0.0f ;
+    float Xd = -0.5f;
     float Yd = 0.5f;
 
-    // Begin Point 
-    float inicio_x = 0.0f;
-    float inicio_y = 0.0f;
+    glm::vec2 pos_init = glm::vec2(Xd, Yd);
+
+    // Begin Point
+    // float inicio_x = 0.0f;
+    // float inicio_y = 0.5f;
 
     // Non-scaled radius => Scaled radius
-    float radio_mayor = 20.0f;
-    float radio_menor = 15.0f;
+    float radio_mayor = 200.0f;
+    float radio_menor = 150.0f;
+
     float a = radio_mayor / scale;
     float b = radio_menor / scale;
 
@@ -201,6 +204,7 @@ int main()
     RungeKutta rk(elipse);
 
     gil::Timer timer(true);
+
     while (window.isActive())
     {
         // Pre Tick calls
@@ -216,20 +220,19 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Rendering Stuff
-        glm::mat4 transform = glm::mat4(1.0f);
-        transform = glm::translate(transform, glm::vec3(inicio_x, inicio_y, 0.0f));
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f) , glm::vec3(pos_init , 0.0f));
 
         if (i < tf / h)
         {
             t = t0 + i * h;
             rk.runge_kutta(vx, vy, Xd, Yd, theta, w, speed.M_G, h, t, i, speed.Fnormal, speed.Ftangencial);
-            transform = glm::translate(transform, glm::vec3(Xd / scale, Yd / scale, 0.0f));
-            cout << transform[0][4] << " " <<transform[1][4] << endl;
+
+            float transform_x = Xd / scale;
+            float transform_y = Yd / scale;
+
+            transform = glm::translate(transform, glm::vec3(transform_x, transform_y, 0.0f));
             transform = glm::rotate(transform, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
 
-
-            // Impresion de vertices para reporte
-            // Rescatar el centro de masa
             float outvertices[ROCK_VERTEX_DATA_SIZE];
             memcpy(outvertices, rock_vertex_data, sizeof(rock_vertex_data));
             transformVertices(outvertices, NUMBER_OF_SECTIONS, transform);
@@ -242,24 +245,19 @@ int main()
             output << endl
                    << endl;
 
-            // aqui se le pasa un centro de masa transformados (MC)
-            float center_mass_X = outvertices[0];
-            float center_mass_Y = outvertices[1];
-
-            //cout << "Centro de masa (" <<center_mass_X << " , " << center_mass_Y << ")"<< endl;
-            //cout << "TALUD " << talud_vertex_data[0] << " " << talud_vertex_data[1] << " " << talud_vertex_data[3] << " " << talud_vertex_data[4] <<endl<<endl;
-
-            point.superposition(center_mass_X, center_mass_Y, talud_vertex_data);
+            /*point.superposition(rock_vertex_data[0], rock_vertex_data[1], talud_vertex_data);
 
             if (point.collision == true)
             {
-                speed.momentos(center_mass_X, center_mass_Y, vx, vy, theta, h, talud_vertex_data);
+                speed.momentos(rock_vertex_data[0], rock_vertex_data[1], vx, vy, theta, h, talud_vertex_data);
 
                 rebote << t << "\t\t\t\t\t(" << Xd / scale << "," << Yd / scale << ") \t (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t (" << speed.velocidad_sigma[2] << " i " << speed.velocidad_sigma[3] << " j) \t (" << speed.velocidad_sigma[0] << " i " << speed.velocidad_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
                        << "\t " << speed.M_G << endl;
-            
+
                 return 0;
-            }
+            }*/
+
+            i++;
         }
 
         else
@@ -282,8 +280,6 @@ int main()
                 // return 0;
             }*/
         }
-
-        i++;
 
         gridShader.use();
         glBindVertexArray(VAO_grid);

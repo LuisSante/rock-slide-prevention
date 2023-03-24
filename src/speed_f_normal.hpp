@@ -64,7 +64,7 @@ public:
         }
     }
 
-    float distancia_euclidiana(float x1, float y1, float x2, float y2);
+    float distancia_euclidiana(float &x1, float &y1, float &x2, float &y2);
     vector<float> vectores_rc(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
     vector<float> velocidad_vec_contacto(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
     void velocidad(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertices_talud[]);
@@ -99,7 +99,7 @@ Speed_F_Normal ::Speed_F_Normal()
     }
 }
 
-float Speed_F_Normal::distancia_euclidiana(float x1, float y1, float x2, float y2)
+float Speed_F_Normal::distancia_euclidiana(float &x1, float &y1, float &x2, float &y2)
 {
     float dif1 = (x2 - x1) * (x2 - x1);
     float dif2 = (y2 - y1) * (y2 - y1);

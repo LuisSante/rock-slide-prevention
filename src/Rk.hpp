@@ -30,7 +30,7 @@ public:
     // sumatoria de fuerzas
     float Fx(float Fni, float Fti);
     float Fy(float Fnj, float Ftj);
-    void runge_kutta(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> Fn, pair<float, float> Ft);
+    void runge_kutta(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft);
 
     friend class Superposition;
     friend class PuntoContacto;
@@ -65,14 +65,12 @@ float RungeKutta::Fy(float Fnj, float Ftj)
 }
 
 // Función para implementar el método de Runge-Kutta de cuarto orden
-void RungeKutta::runge_kutta(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> Fn, pair<float, float> Ft)
+void RungeKutta::runge_kutta(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft)
 {
-    // float x = Xd, y = Yd, vx = vx0, vy = vy0, theta = theta0;
     float k1x, k2x, k3x, k4x, k1y, k2y, k3y, k4y, k1vx, k2vx, k3vx, k4vx, k1vy, k2vy, k3vy, k4vy;
     float k1omega, k2omega, k3omega, k4omega, k1theta, k2theta, k3theta, k4theta;
     float derivada_w = MG / I;
 
-    // float t = t0 + i * h;
     Frame_Rk << t << " " << position_x << " " << position_y << " " << velocity_x << " " << velocity_y << " " << theta << endl;
 
     k1vx = Fx(Fn.first, Ft.first);

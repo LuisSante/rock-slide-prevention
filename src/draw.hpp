@@ -3,25 +3,27 @@
 
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 #include <cmath>
 #ifdef M_PI
-    #undef M_PI
+#undef M_PI
 #endif
 #define M_PI 3.14159265358979323846f
 
 using std::vector;
+std::ofstream vertices("C:/Users/Usuario/Desktop/hilarios/src/reportes/vertices.txt");
 
 class Draw
 {
 private:
-    float a;
-    float b;
     float Xd;
     float Yd;
+    float a;
+    float b;
     int number_of_sections;
 
-    //fuerzas externas
+    // fuerzas externas
 
 public:
     int n;
@@ -56,7 +58,6 @@ Draw::Draw(float Xd, float Yd, float a, float b, int number_of_sections)
     this->a = a;
     this->b = b;
     this->number_of_sections = number_of_sections;
-
 }
 
 float Draw::degrees_to_radians(float angulo)
@@ -68,8 +69,8 @@ void Draw::vertices_elipse(float vertex_data[])
 {
     float angle_step = 360.0f / static_cast<float>(number_of_sections);
 
-    vertex_data[0] = Xd;
-    vertex_data[1] = Yd;
+    vertex_data[0] = 0.0f;
+    vertex_data[1] = 0.0f;
     vertex_data[2] = 0.0f;
 
     vertex_data[3] = 0.0f;
@@ -80,15 +81,22 @@ void Draw::vertices_elipse(float vertex_data[])
     float angle = 0.0f;
     for (int i = 1; i < number_of_sections + 1; ++i)
     {
-        vertex_data[i * 6 + 0] = Xd + (a * cosf(degrees_to_radians(angle))); // coordenada X
-        vertex_data[i * 6 + 1] = Yd + (b * sinf(degrees_to_radians(angle))); // coordenada Y
-        vertex_data[i * 6 + 2] = 0.0f; // coordenada Z
+        vertex_data[i * 6 + 0] = 0.0f + (a * cosf(degrees_to_radians(angle))); // coordenada X
+        vertex_data[i * 6 + 1] = 0.0f + (b * sinf(degrees_to_radians(angle))); // coordenada Y
+        vertex_data[i * 6 + 2] = 0.0f;                                       // coordenada Z
 
         vertex_data[i * 6 + 3] = 0.0f;
         vertex_data[i * 6 + 4] = 0.0f;
         vertex_data[i * 6 + 5] = 1.0f;
 
         angle += angle_step;
+    }
+
+    for (int i = 1; i < number_of_sections + 1; ++i)
+    {
+        vertices << "(" << vertex_data[i * 6 + 0] << " , "
+                 << vertex_data[i * 6 + 1] << " , "
+                 << vertex_data[i * 6 + 2] << " ) " << std::endl;
     }
 }
 
@@ -98,7 +106,7 @@ void Draw::indices_elipse(unsigned int indices[])
     int current_index_base = 1;
     for (int j = 0; j < number_of_sections; ++j)
     {
-        indices[j * 3 + 0] = 0; // todos los triangulos parten del centro
+        indices[j * 3 + 0] = 0;                      // todos los triangulos parten del centro
         indices[j * 3 + 1] = current_index_base + 0; // 2do vertices
         indices[j * 3 + 2] = current_index_base + 1; // 3er vertice
         ++current_index_base;
