@@ -17,24 +17,18 @@ std::ofstream vertices("C:/Users/Usuario/Desktop/hilarios/src/reportes/vertices.
 class Draw
 {
 private:
-    float Xd;
-    float Yd;
     float a;
     float b;
     int number_of_sections;
-
-    // fuerzas externas
 
 public:
     int n;
 
     Draw();
-    Draw(float Xd, float Yd, float a, float b, int number_of_sections);
+    Draw(float a, float b, int number_of_sections);
     float degrees_to_radians(float angulo);
     void vertices_elipse(float vertices[]);
     void indices_elipse(unsigned int indices[]);
-    /*void movimiento_proyectil(float t, float Xd, float Yd, float &vx, float &vy, float &theta);
-    void move(float delta_pos_x[], float delta_pos_y[], float theta_array[]);*/
 
     friend class RungeKutta;
     friend class Superposition;
@@ -44,17 +38,13 @@ public:
 
 Draw::Draw()
 {
-    Xd = 0.0f;
-    Yd = 0.0f;
     a = 0.0f;
     b = 0.0f;
     number_of_sections = 0;
 };
 
-Draw::Draw(float Xd, float Yd, float a, float b, int number_of_sections)
+Draw::Draw(float a, float b, int number_of_sections)
 {
-    this->Xd = Xd;
-    this->Yd = Yd;
     this->a = a;
     this->b = b;
     this->number_of_sections = number_of_sections;
@@ -81,8 +71,8 @@ void Draw::vertices_elipse(float vertex_data[])
     float angle = 0.0f;
     for (int i = 1; i < number_of_sections + 1; ++i)
     {
-        vertex_data[i * 6 + 0] = 0.0f + (a * cosf(degrees_to_radians(angle))); // coordenada X
-        vertex_data[i * 6 + 1] = 0.0f + (b * sinf(degrees_to_radians(angle))); // coordenada Y
+        vertex_data[i * 6 + 0] = a * cosf(degrees_to_radians(angle)); // coordenada X
+        vertex_data[i * 6 + 1] = b * sinf(degrees_to_radians(angle)); // coordenada Y
         vertex_data[i * 6 + 2] = 0.0f;                                       // coordenada Z
 
         vertex_data[i * 6 + 3] = 0.0f;

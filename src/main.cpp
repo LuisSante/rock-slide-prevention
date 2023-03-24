@@ -74,7 +74,7 @@ int main()
     float scale = 3500.0f;
 
     // Non-sacled origin => Scaled origin
-    float Xd = -0.5f;
+    float Xd = 0.0f;
     float Yd = 0.5f;
 
     glm::vec2 pos_init = glm::vec2(Xd, Yd);
@@ -94,7 +94,7 @@ int main()
     float vx = 70.9f;
     float vy = 90.0f;
     float theta = 0.0f * M_PI / 180.0f;
-    Draw elipse(Xd, Yd, a, b, NUMBER_OF_SECTIONS);
+    Draw elipse(a, b, NUMBER_OF_SECTIONS);
     /*****************************************************************************/
 
     // Raw Vertex Data
