@@ -31,7 +31,7 @@ private:
 
 public:
     bool collision;
-    pair<float , float> perpendicular; // Sigma n
+    pair<float, float> perpendicular; // Sigma n
 
     PointContact();
     PointContact(Draw &draw);
@@ -85,7 +85,7 @@ void PointContact::print_matrix(float matrix[2][2])
 }
 
 bool PointContact::decomposition_LU(float matrix[2][2], int dimension,
-                                      float L[2][2], float U[2][2])
+                                    float L[2][2], float U[2][2])
 {
     // Verificar que la matrix sea cuadrada
     if (dimension <= 0 || dimension > MAX_DIMENSION)
@@ -144,7 +144,7 @@ bool PointContact::decomposition_LU(float matrix[2][2], int dimension,
 }
 
 bool PointContact::resolver_sistema(float L[2][2], float U[2][2],
-                                     float b[2], int dimension, float x[2])
+                                    float b[2], int dimension, float x[2])
 {
     // Resolver Ly = b usando sustitución hacia adelante
     float y[2] = {};
@@ -259,13 +259,13 @@ vector<float> PointContact::locales(float current_center_mass_X, float current_c
     local_middles.push_back(x2_);
     local_middles.push_back(y2_);
 
-    /*cout << "FUNCION LOCALES" << endl;
+    cout << "FUNCION LOCALES" << endl;
     for (int i = 0; i < local_middles.size(); i++)
     {
         cout << local_middles[i]<< " ";
     }
     cout << endl
-         << endl;*/
+         << endl;
 
     return local_middles;
 }
@@ -284,7 +284,6 @@ vector<float> PointContact::machine(float current_center_mass_X, float current_c
     float ml = (draw.a / draw.b) * ((local_middles[3] - local_middles[1]) / (local_middles[2] - local_middles[0]));
     float bl = (local_middles[1] / draw.b) - (ml * (local_middles[0] / draw.a));
 
-
     middle.push_back(ml);
     middle.push_back(bl);
 
@@ -298,21 +297,22 @@ vector<float> PointContact::machine(float current_center_mass_X, float current_c
     double discriminant_root = sqrt(abs(discriminant));
     float real_part = 0.0f, part_imagine = 0.0f;
 
-    impact << "discriminant : "<<discriminant << endl;
+    impact << "discriminant : " << discriminant << endl;
 
     if (discriminant > 0 || discriminant == 0)
     {
         s1 = (-e_b + discriminant_root) / (2 * e_a);
         s2 = (-e_b - discriminant_root) / (2 * e_a);
         collision = true;
-        //impact << "Interseccion" << endl;
+        cout << ml << " " << bl << endl;
+        // impact << "Interseccion" << endl;
     }
     else
     {
         real_part = -e_b / (2 * e_a);
         part_imagine = discriminant_root / (2 * e_a);
         collision = false;
-        //impact << "No hay interseccion" << endl;
+        // impact << "No hay interseccion" << endl;
     }
 
     // Root
@@ -357,7 +357,7 @@ vector<float> PointContact::machine(float current_center_mass_X, float current_c
 
 void PointContact::superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_slope[])
 {
-    //vector<float> distance_perpendicular;
+    // vector<float> distance_perpendicular;
     vector<float> point_middle = machine(current_center_mass_X, current_center_mass_Y, vertices_slope);
     float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));

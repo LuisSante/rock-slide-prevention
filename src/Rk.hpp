@@ -41,7 +41,7 @@ RungeKutta::RungeKutta() : draw()
 
 RungeKutta::RungeKutta(Draw &draw) : draw(draw)
 {
-    I = mass * 3500*((draw.a * draw.b) * (draw.a * draw.a + draw.b * draw.b)) / 4.0f;
+    I = mass * ((draw.a * draw.b) * (draw.a * draw.a + draw.b * draw.b)) / 4.0f;
 }
 
 // Funciones para calcular las forces en x e y
