@@ -97,6 +97,8 @@ void RungeKutta::runge_kutta(float &velocity_x, float &velocity_y, float &positi
     velocity_x += (h / 6.0f) * (k1vx + 2.0f * k2vx + 2.0f * k3vx + k4vx);
     velocity_y += (h / 6.0f) * (k1vy + 2.0f * k2vy + 2.0f * k3vy + k4vy);
     theta += (h / 6.0f) * (k1theta + 2.0f * k2theta + 2.0f * k3theta + k4theta);
+
+    //cout << velocity_x << " " << velocity_y << endl;
 }
 
 #endif

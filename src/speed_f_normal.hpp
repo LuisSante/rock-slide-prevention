@@ -13,7 +13,7 @@
 #include "punto_contacto.hpp"
 
 #ifdef M_PI
-    #undef M_PI
+#undef M_PI
 #endif
 #define M_PI 3.14159265358979323846f
 
@@ -109,6 +109,11 @@ float Speed_F_Normal::euclidean_distance(float &x1, float &y1, float &x2, float 
 
 vector<float> Speed_F_Normal::vector_rc(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertex_slope[])
 {
+    cout << " current_center_mass_X : " << current_center_mass_X << endl;
+    cout << " current_center_mass_Y : " << current_center_mass_Y << endl;
+    cout << " current_velocity_X : " << current_velocity_X << endl;
+    cout << " current_velocity_Y : " << current_velocity_Y << endl;
+    cout << " angle : " << angle << endl;
     vector<float> result = {};
 
     vector<float> point_middle = contact.machine(current_center_mass_X, current_center_mass_Y, vertex_slope);
@@ -132,6 +137,7 @@ vector<float> Speed_F_Normal::vector_rc(float current_center_mass_X, float curre
     result.push_back(rc_vi);
     result.push_back(rc_vj);
     velocity_report << "rc_vi: " << rc_vi << " rc_vj: " << rc_vj << endl;
+    cout << "rc_vi: " << rc_vi << " rc_vj: " << rc_vj << endl;
 
     return result;
 }
@@ -148,6 +154,7 @@ vector<float> Speed_F_Normal::velocity_vec_contact(float current_center_mass_X, 
     float vc_j = current_velocity_Y + (angle * vector_rc_[0]);
     vectors_contact.push_back(vc_j);
     velocity_report << "vc_i: " << vc_i << " vc_j: " << vc_j << endl;
+    cout << "vc_i: " << vc_i << " vc_j: " << vc_j << endl;
 
     // Vectors_unitarians
     float distance = euclidean_distance(vertex_slope[0], vertex_slope[1], vertex_slope[3], vertex_slope[4]);
@@ -162,6 +169,7 @@ vector<float> Speed_F_Normal::velocity_vec_contact(float current_center_mass_X, 
     vectors_contact.push_back(e_j);
 
     velocity_report << "w_i: " << w_i << " w_j: " << w_j << " e_i: " << e_i << " e_j: " << e_j << endl;
+    cout << "w_i: " << w_i << " w_j: " << w_j << " e_i: " << e_i << " e_j: " << e_j << endl;
 
     return vectors_contact;
 }
@@ -181,6 +189,7 @@ void Speed_F_Normal::velocity(float current_center_mass_X, float current_center_
     velocity_sigma.push_back(sigma_n_j);
 
     velocity_report << "sigma_t_i: " << sigma_t_i << " sigma_t_j: " << sigma_t_j << " sigma_n_i: " << sigma_n_i << " sigma_n_j: " << sigma_n_j << endl;
+    cout << "sigma_t_i: " << sigma_t_i << " sigma_t_j: " << sigma_t_j << " sigma_n_i: " << sigma_n_i << " sigma_n_j: " << sigma_n_j << endl;
 
     // return velocity_sigma;
 }
@@ -262,6 +271,12 @@ void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float c
     velocity_report << "kn: " << k_n << endl;
     velocity_report << "K_n_module_sigma: " << kn_module_sigma << endl;
 
+    cout << "modulo_normal: " << module << endl;
+    cout << "E_star_normal: " << E_star << endl;
+    cout << "r_star_normal: " << r_star << endl;
+    cout << "kn_normal: " << k_n << endl;
+    cout << "K_n_module_sigma_normal: " << kn_module_sigma << endl;
+
     vector<float> velocity_contact = velocity_vec_contact(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope);
     // Vectors_i , Vectors_j
     // Force resort
@@ -282,13 +297,19 @@ void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float c
     cn_sigma_n_i = -cn_sigma_n_i;
     cn_sigma_n_j = -cn_sigma_n_j;
 
+    cout << " kn_module_i: " << kn_module_i << endl;
+    cout << " kn_module_j: " << kn_module_j << endl;
+    cout << " cn_sigma_n_i: " << cn_sigma_n_i << endl;
+    cout << " cn_sigma_n_j: " << cn_sigma_n_j << endl;
+
     float FN_i = kn_module_i + cn_sigma_n_i;
     float FN_j = kn_module_j + cn_sigma_n_j;
 
-    velocity_report << " Fn_i " << FN_i << " Fn_j " << FN_j << endl;
-
     F_normal.first = FN_i;
     F_normal.second = FN_j;
+
+    velocity_report << " Fn_i " << F_normal.first << " Fn_j " << F_normal.second << endl;
+    cout << " Fn_i " << F_normal.first << " Fn_j " << F_normal.second << endl;
 
     /*velocity_report << "CLASS SPEED "
          << "FN_I : " << FN_i << " Fn_j : " << FN_j << endl;*/
@@ -304,32 +325,56 @@ float Speed_F_Normal::coefficient_friction(float current_center_mass_X, float cu
 
 void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float h, float vertex_slope[])
 {
+    cout << " current_center_mass_X : " << current_center_mass_X << endl;
+    cout << " current_center_mass_Y : " << current_center_mass_Y << endl;
+    cout << " current_velocity_X : " << current_velocity_X << endl;
+    cout << " current_velocity_Y : " << current_velocity_Y << endl;
+    cout << " angle : " << angle << endl;
+
     contact.superposition(current_center_mass_X, current_center_mass_Y, vertex_slope);
+
     float module = contact.perpendicular.second;
     if (module < 0)
         module = -module;
+
+    cout << " module_t : " << module << endl;
 
     velocity(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope); /*sigma_point[2]i y sigma_point[3]j pos*/
     vector<float> w = velocity_vec_contact(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope);
     float mu_fn = coefficient_friction(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope);
 
+    cout << " mu_fn_t : " << mu_fn << endl;
+
     float mu_fn_i = mu_fn * -w[2];
     float mu_fn_j = mu_fn * -w[3];
+
+    cout << " mu_fn_i_t : " << mu_fn_i << endl;
+    cout << " mu_fn_j_t : " << mu_fn_j << endl;
 
     float G_star = equivalent_shear_modulus();
     float r_star = radio_equivalent();
     float kt = 8 * G_star * sqrt(r_star * module);
     float gama = gamma_t();
 
-    velocity_report << "modulo: " << module << endl;
-    velocity_report << "G_star " << G_star << endl;
-    velocity_report << "r_star " << r_star << endl;
-    velocity_report << "kt: " << kt << endl;
-    velocity_report << "gama: " << gama << endl;
+    cout << "modulo_t : " << module << endl;
+    cout << "G_star_t : " << G_star << endl;
+    cout << "r_star_t : " << r_star << endl;
+    cout << "kt_t : " << kt << endl;
+    cout << "gama_t : " << gama << endl;
+
+    velocity_report << "modulo_t : " << module << endl;
+    velocity_report << "G_star_t : " << G_star << endl;
+    velocity_report << "r_star_t : " << r_star << endl;
+    velocity_report << "kt_t : " << kt << endl;
+    velocity_report << "gama_t : " << gama << endl;
 
     float F_tangential_buffer = 2 * gama * sqrt(m_star * kt);
     float F_tangential_buffer_i = F_tangential_buffer * velocity_sigma[0];
     float F_tangential_buffer_j = F_tangential_buffer * velocity_sigma[1];
+
+    cout << " F_tangential_buffer : " << F_tangential_buffer << endl;
+    cout << " F_tangential_buffer_i : " << F_tangential_buffer_i << endl;
+    cout << " F_tangential_buffer_j : " << F_tangential_buffer_j << endl;
 
     float step_back_i = 0; // Force tangential elastics_i
     float step_back_j = 0; // Force tangential elastics_j
@@ -337,14 +382,26 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
     float k_i_t_delta_time_i = kt * h * velocity_sigma[0];
     float k_i_t_delta_time_j = kt * h * velocity_sigma[1];
 
+    cout << " k_i_t_delta_time_i : " << k_i_t_delta_time_i << endl;
+    cout << " k_i_t_delta_time_j : " << k_i_t_delta_time_j << endl;
+
     float actual_calculate_tangential_force_resort_i = k_i_t_delta_time_i + step_back_i;
     float actual_calculate_tangential_force_resort_j = k_i_t_delta_time_j + step_back_j;
+
+    cout << " actual_calculate_tangential_force_resort_i : " << actual_calculate_tangential_force_resort_i << endl;
+    cout << " actual_calculate_tangential_force_resort_j : " << actual_calculate_tangential_force_resort_j << endl;
 
     actual_calculate_tangential_force_resort_i = -actual_calculate_tangential_force_resort_i;
     actual_calculate_tangential_force_resort_j = -actual_calculate_tangential_force_resort_j;
 
+    cout << " actual_calculate_tangential_force_resort_i_new : " << actual_calculate_tangential_force_resort_i << endl;
+    cout << " actual_calculate_tangential_force_resort_j_new : " << actual_calculate_tangential_force_resort_j << endl;
+
     F_tangential_buffer_i = -F_tangential_buffer_i;
     F_tangential_buffer_j = -F_tangential_buffer_j;
+
+    cout << " F_tangential_buffer_i_new : " << F_tangential_buffer_i << endl;
+    cout << " F_tangential_buffer_j_new : " << F_tangential_buffer_j << endl;
 
     velocity_report << " actual_calculate_tangential_force_resort_i : " << actual_calculate_tangential_force_resort_i << " actual_calculate_tangential_force_resort_j : " << actual_calculate_tangential_force_resort_j << endl;
     velocity_report << " F_tangential_buffer_i : " << F_tangential_buffer_i << " F_tangential_buffer_j : " << F_tangential_buffer_j << endl;
@@ -354,21 +411,30 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
 
     Ft = sqrt((Ft_i * Ft_i) + (Ft_j * Ft_j));
 
+    cout << "Antes de entrar a la condicion Ft : " << Ft << endl;
+    cout << "Antes de entrar a la condicion Ft_i : " << Ft_i << endl;
+    cout << "Antes de entrar a la condicion Ft_j : " << Ft_j << endl;
+
     if (Ft >= mu_fn)
     {
+        cout << "ENTRO AL IF" << endl;
         Ft = mu_fn;
         F_tangential.first = mu_fn_i;
         F_tangential.second = mu_fn_j;
     }
     else
     {
+        cout << "ENTRO AL ELSE" << endl;
         F_tangential.first = Ft_i;
         F_tangential.second = Ft_j;
-        ;
     }
 
+    cout << " Ft : " << Ft << endl;
+    cout << " Ft_i : " << F_tangential.first << endl;
+    cout << " Ft_j : " << F_tangential.second << endl;
+
     velocity_report << "CLASS SPEED "
-                    << "Ft_i : " << Ft_i << " Ft_j : " << Ft_j << endl;
+                    << "Ft_i : " << F_tangential.first << " Ft_j : " << F_tangential.second << endl;
 
     velocity_report << " Ft " << Ft << endl;
 }
@@ -382,7 +448,12 @@ void Speed_F_Normal::momentos(float current_center_mass_X, float current_center_
     float f_total_i = F_normal.first + F_tangential.first;
     float f_total_j = F_normal.second + F_tangential.second;
 
+    cout << " f_total_i : " << f_total_i << endl;
+    cout << " f_total_j : " << f_total_j << endl;
+
     M_G = (rc[0] * f_total_j) - (rc[1] * f_total_i);
+
+    cout << " M_G : " << M_G << endl;
 }
 
 #endif

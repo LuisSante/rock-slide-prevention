@@ -73,16 +73,14 @@ int main()
     /*****************************************************************************/
     // General Scale
     float scale = 3500.0f;
-
-    // Non-scaled origin => Scaled origin
     float center_mass_x = 0.0f;
     float center_mass_y = 0.5f;
 
     glm::vec2 pos_init = glm::vec2(center_mass_x, center_mass_y);
 
     // Non-scaled radius => Scaled radius
-    float radio_major = 30.0f;
-    float radio_minor = 25.0f;
+    float radio_major = 20.0f;
+    float radio_minor = 15.0f;
 
     float a = radio_major / scale;
     float b = radio_minor / scale;
@@ -217,11 +215,11 @@ int main()
         // Rendering Stuff
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(pos_init, 0.0f));
 
-        if (vx > 0 && vy > 0)
+        if (i < tf / h)
         {
             t = t0 + i * h;
 
-            Frame_Rk << "T: " << t << " (center_mass_x,center_mass_y): (" << center_mass_x << " , " << center_mass_y << ") vx: " << vx << " vy: " << vy << " giro (rads): " << theta << " Mg: " << speed.M_G << " F_normal: (" << speed.F_normal.first << " , " << speed.F_normal.second << ") F_tangential : (" <<speed.F_tangential.first << " , " << speed.F_tangential.second << ")" <<endl;
+            Frame_Rk << "T: " << t << " (center_mass_x,center_mass_y): (" << center_mass_x << " , " << center_mass_y << ") vx: " << vx << " vy: " << vy << " giro (rads): " << theta << " Mg: " << speed.M_G << " F_normal: (" << speed.F_normal.first << " , " << speed.F_normal.second << ") F_tangential : (" << speed.F_tangential.first << " , " << speed.F_tangential.second << ")" << endl;
 
             rk.runge_kutta(vx, vy, center_mass_x, center_mass_y, theta, w, speed.M_G, h, t, i, speed.F_normal, speed.F_tangential);
 
@@ -240,7 +238,8 @@ int main()
             {
                 report << "Vertex " << i << ": (" << (out_vertex[i * 6 + 0]) << ", " << (out_vertex[i * 6 + 1]) << ", " << (out_vertex[i * 6 + 2]) << ")" << endl;
             }
-            report << endl << endl;
+            report << endl
+                   << endl;
 
             point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data);
 
@@ -249,14 +248,15 @@ int main()
                 // I pass you vertices of the virtual world
                 speed.momentos(out_vertex[0], out_vertex[1], vx, vy, theta, h, slope_vertex_data);
 
-                rebound << " Second: " << t << "\t\t\t\t\t (X,Y): (" << out_vertex[0]  << "," << out_vertex[0] << ") \t Sig_n: (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t D_Sig_n : (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t D_Sig_t: (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t F_normal : " << speed.FN << "\t F_tangential: " << speed.Ft << "\t"
+                rebound << " Second: " << t << "\t\t\t\t\t (X,Y): (" << out_vertex[0] << "," << out_vertex[1] << ") \t Sig_n: (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t D_Sig_n : (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t D_Sig_t: (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t F_normal : " << speed.FN << "\t (" << speed.F_normal.first << " i, " << speed.F_normal.second << " j) \t F_tangential: " << speed.Ft << " \t (" << speed.F_tangential.first << "i , " << speed.F_tangential.second << ") \t"
                         << "\t Mg : " << speed.M_G << endl;
+                //return 0;
             }
 
             i++;
         }
 
-        /*else if (i == tf/ h)
+        else if (i == tf / h)
         {
             t = t0 + i * h;
             rk.runge_kutta(vx, vy, center_mass_x, center_mass_y, theta, w, MG, h, t, i, speed.F_normal, speed.F_tangential);
@@ -270,13 +270,16 @@ int main()
 
             if (point.collision == true)
             {
+
                 speed.momentos(out_vertex[0], out_vertex[1], vx, vy, theta, h, slope_vertex_data);
 
                 rebound << "(" << center_mass_x << "," << center_mass_y << ") \t (" << point.perpendicular.first * scale << "\t" << point.perpendicular.second * scale << ") \t (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
                         << "\t " << speed.M_G << endl;
                 MG = speed.M_G;
+
+                //return 0;
             }
-        }*/
+        }
 
         gridShader.use();
         glBindVertexArray(VAO_grid);
@@ -295,7 +298,7 @@ int main()
         window.swapBuffers();
         timer.tick();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
