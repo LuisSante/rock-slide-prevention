@@ -31,6 +31,14 @@ constexpr unsigned int NUMBER_OF_SECTIONS = 18;
 constexpr unsigned int ROCK_VERTEX_DATA_SIZE = (NUMBER_OF_SECTIONS + 1) * 6;
 constexpr unsigned int ROCK_INDICES_SIZE = NUMBER_OF_SECTIONS * 3;
 
+// Seed
+constexpr int DATA = 997;
+constexpr long long B = 314159239;
+constexpr long long C = 453806245;
+constexpr int init = 36;
+constexpr double mean = 0.25;
+constexpr double standard_deviation = 0.05;
+
 /*****************************************************************************/
 void transformVertices(float *vertices, int numVertices, const glm::mat4 &transform)
 {
@@ -276,7 +284,6 @@ int main()
                 rebound << "(" << center_mass_x << "," << center_mass_y << ") \t (" << point.perpendicular.first * scale << "\t" << point.perpendicular.second * scale << ") \t (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
                         << "\t " << speed.M_G << endl;
                 MG = speed.M_G;
-
                 //return 0;
             }
         }
