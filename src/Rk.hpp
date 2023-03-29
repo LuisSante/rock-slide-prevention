@@ -17,7 +17,6 @@ private:
     Draw draw;
     // RK
     float mass = 120.0f;
-    float force = 0.0f;
     const float g = 9.81f;
     float I;
 
