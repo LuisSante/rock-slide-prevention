@@ -30,7 +30,7 @@ public:
     void vertex_ellipse(float vertex[]);
     void index_ellipse(unsigned int index[]);
 
-    friend class RungeKutta;
+    friend class Move;
     friend class Superposition;
     friend class PointContact;
     friend class Speed_F_Normal;

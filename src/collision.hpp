@@ -1,5 +1,5 @@
-#ifndef PUNTO_CONTACTO_HPP
-#define PUNTO_CONTACTO_HPP
+#ifndef COLLISION_HPP
+#define COLLISION_HPP
 
 #include <iostream>
 #include <vector>
@@ -17,14 +17,13 @@ using namespace std;
 constexpr int MAX_DIMENSION = 100;
 
 std::ofstream impact("C:/Users/Usuario/Desktop/hilarios/src/reportes/impact.txt");
-std::ofstream locals("C:/Users/Usuario/Desktop/hilarios/src/reportes/local.txt");
 
 class PointContact
 {
 private:
     Draw draw;
     int dimension = 2;
-    float theta_slope = 75.98 * 3.1416f / 180.0f;
+    float theta_slope = 255.96f * 3.1416f / 180.0f;
     float matrix_angles[2][2] = {{cos(theta_slope), -sin(theta_slope)}, {sin(theta_slope), cos(theta_slope)}};
     float vertices_difference[6];
     float vertices_locales_slope[6];
@@ -88,13 +87,11 @@ void PointContact::print_matrix(float matrix[2][2])
 bool PointContact::decomposition_LU(float matrix[2][2], int dimension,
                                     float L[2][2], float U[2][2])
 {
-    // Verificar que la matrix sea cuadrada
     if (dimension <= 0 || dimension > MAX_DIMENSION)
     {
         return false;
     }
 
-    // Copiar la matrix original a U
     for (int i = 0; i < dimension; i++)
     {
         for (int j = 0; j < dimension; j++)
@@ -103,7 +100,6 @@ bool PointContact::decomposition_LU(float matrix[2][2], int dimension,
         }
     }
 
-    // Inicializar L con la matrix identidad
     for (int i = 0; i < dimension; i++)
     {
         for (int j = 0; j < dimension; j++)
@@ -119,12 +115,11 @@ bool PointContact::decomposition_LU(float matrix[2][2], int dimension,
         }
     }
 
-    // Realizar la descomposición LU
     for (int k = 0; k < dimension; k++)
     {
         if (U[k][k] == 0)
         {
-            return false; // La matrix no tiene inverse
+            return false;
         }
 
         for (int i = k + 1; i < dimension; i++)
@@ -147,7 +142,6 @@ bool PointContact::decomposition_LU(float matrix[2][2], int dimension,
 bool PointContact::resolver_sistema(float L[2][2], float U[2][2],
                                     float b[2], int dimension, float x[2])
 {
-    // Resolver Ly = b usando sustitución hacia adelante
     float y[2] = {};
 
     for (int i = 0; i < dimension; i++)
@@ -162,7 +156,6 @@ bool PointContact::resolver_sistema(float L[2][2], float U[2][2],
         y[i] = b[i] - sum;
     }
 
-    // Resolver Ux = y usando sustitución hacia atrás
     for (int i = dimension - 1; i >= 0; i--)
     {
         float sum = 0;
@@ -176,7 +169,7 @@ bool PointContact::resolver_sistema(float L[2][2], float U[2][2],
 
         if (isnan(x[i]))
         {
-            return false; // La matrix no tiene inverse
+            return false;
         }
     }
 
@@ -185,20 +178,17 @@ bool PointContact::resolver_sistema(float L[2][2], float U[2][2],
 
 bool PointContact::calculate_inverse(float inverse[2][2])
 {
-    // Verificar que la matrix sea cuadrada
     if (dimension <= 0 || dimension > MAX_DIMENSION)
     {
         return false;
-    } // Calcular la descomposición LU
+    }
     float L[2][2] = {};
     float U[2][2] = {};
 
     if (!decomposition_LU(matrix_angles, dimension, L, U))
     {
-        return false; // La matrix no tiene inverse
+        return false;
     }
-
-    // Inicializar la matrix inverse con ceros
     for (int i = 0; i < dimension; i++)
     {
         for (int j = 0; j < dimension; j++)
@@ -207,7 +197,6 @@ bool PointContact::calculate_inverse(float inverse[2][2])
         }
     }
 
-    // Resolver dimension sistemas de equationes para obtener la matrix inverse
     for (int i = 0; i < dimension; i++)
     {
         float b[2] = {};
@@ -245,6 +234,12 @@ vector<float> PointContact::locales(float current_center_mass_X, float current_c
         vertices_locales_slope[i] = vertices_slope_[i] - vertices_difference[i];
     }
 
+    for (int i = 0; i < 6; i++)
+    {
+        cout << vertices_locales_slope[i] << " ";
+    }
+    cout << endl;
+
     float x1_ellipse_local = vertices_locales_slope[0];
     float y1_ellipse_local = vertices_locales_slope[1];
     float x2_ellipse_local = vertices_locales_slope[3];
@@ -260,13 +255,14 @@ vector<float> PointContact::locales(float current_center_mass_X, float current_c
     local_middles.push_back(x2_);
     local_middles.push_back(y2_);
 
-    /*cout << "FUNCTION LOCALES" << endl;
+
+    cout << "LOCAL FUNCTION" << endl;
     for (int i = 0; i < local_middles.size(); i++)
     {
         cout << local_middles[i] << " ";
     }
     cout << endl
-         << endl;*/
+         << endl;
 
     return local_middles;
 }
@@ -275,11 +271,11 @@ vector<float> PointContact::machine(float current_center_mass_X, float current_c
 {
     vector<float> middle;
 
-    cout << " draw.a : " << draw.a << endl;
-    cout << " draw.b : " << draw.b << endl;
-    cout << " current_center_mass_X : " << current_center_mass_X << endl;
-    cout << " current_center_mass_Y : " << current_center_mass_Y << endl;
-
+    cout << " draw.a : " << draw.a <<endl;
+    cout << " draw.b : " << draw.b <<endl;
+    cout << " current_center_mass_X : " << current_center_mass_X <<endl;
+    cout << " current_center_mass_Y : " << current_center_mass_Y <<endl;
+    
     if (!calculate_inverse(inverse))
     {
         cout << "No inverse" << endl;
@@ -294,7 +290,6 @@ vector<float> PointContact::machine(float current_center_mass_X, float current_c
     middle.push_back(bl);
 
     cout << " ml: " << ml << " bl: " << bl << endl;
-    locals << " ml: " << ml << " bl: " << bl << endl;
 
     // Quadratic equation
     double e_a = ((ml * ml) + 1);
@@ -344,22 +339,22 @@ vector<float> PointContact::machine(float current_center_mass_X, float current_c
 
     cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
 
-    float point_middle_x = 30 *((_x1_ + _x2_) / 2.0f);
-    float point_middle_y = 30 *((_y1_ + _y2_) / 2.0f);
+    float point_middle_x = (_x1_ + _x2_) / 2.0f;
+    float point_middle_y = (_y1_ + _y2_) / 2.0f;
 
     cout << "(XC , YC) = (" << point_middle_x << " ," << point_middle_y << ")" << endl;
 
     middle.push_back(point_middle_x);
     middle.push_back(point_middle_y);
 
-    cout << "FUNCTION MACHINE FOR THE POINTS MIDDLES " << endl;
+    /*cout << "FUNCTION MACHINE FOR THE POINTS MIDDLES " << endl;
     cout << current_center_mass_X << " " << current_center_mass_Y << endl;
     for (int i = 0; i < middle.size(); i++)
     {
         cout << middle[i] << " ";
     }
     cout << endl
-         << endl;
+         << endl;*/
 
     return middle;
 }
@@ -368,7 +363,6 @@ void PointContact::superposition(float current_center_mass_X, float current_cent
 {
     // vector<float> distance_perpendicular;
     vector<float> point_middle = machine(current_center_mass_X, current_center_mass_Y, vertices_slope);
-    // cout << "Punto medio : " << point_middle[2] << " " << point_middle[3] << endl;
     float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     cout << " pA1 : " << pA1 << " pA2 : " << pA2 << endl;
@@ -387,7 +381,7 @@ void PointContact::superposition(float current_center_mass_X, float current_cent
     double yA1_ = ((matrix_angles[1][0] * xA1) + (matrix_angles[1][1] * yA1)) + current_center_mass_Y;
     double xA2_ = ((matrix_angles[0][0] * xA2) + (matrix_angles[0][1] * yA2)) + current_center_mass_X;
     double yA2_ = ((matrix_angles[1][0] * xA2) + (matrix_angles[1][1] * yA2)) + current_center_mass_Y;
-    cout << xA1_ << " " << yA1_ << " " << xA2_ << " " << yA2_ << endl;
+    cout<<xA1_<<" "<<yA1_<<" "<<xA2_<<" "<<yA2_<<endl;
 
     double A = -(vertices_slope[4] - vertices_slope[1]) / (vertices_slope[3] - vertices_slope[0]);
     double B = 1;
@@ -396,10 +390,10 @@ void PointContact::superposition(float current_center_mass_X, float current_cent
     // cout<<A<<" "<<B<<" "<<C<<endl;
 
     // std::cout << A << " " << B << " " << C << std::endl;
-    float per_1 = 30 * (((A * xA1_) + (B * yA1_) + C) / (sqrt((A * A) + (B * B))));
-    float per_2 = 30 * ((A * xA2_) + (B * yA2_) + C) / (sqrt((A * A) + (B * B)));
+    float per_1 = ((A * xA1_) + (B * yA1_) + C) / (sqrt((A * A) + (B * B)));
+    float per_2 = ((A * xA2_) + (B * yA2_) + C) / (sqrt((A * A) + (B * B)));
 
-    cout << "per_1 : " << per_1 << " per_2 : " << per_2 << endl;
+    cout << "per_1 : " << per_1 << " per_2 : "<<per_2<<endl;
 
     perpendicular.first = per_1;
     perpendicular.second = per_2;

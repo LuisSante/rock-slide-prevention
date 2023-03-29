@@ -15,17 +15,19 @@
 #include <cstring>
 
 #include "draw.hpp"
-#include "Rk.hpp"
-#include "punto_contacto.hpp"
+#include "move.hpp"
+#include "collision.hpp"
 #include "speed_f_normal.hpp"
 
 using std::vector;
-
+std::ofstream report("C:/Users/Usuario/Desktop/hilarios/src/reports/report.txt");
+std::ofstream rebound("C:/Users/Usuario/Desktop/hilarios/src/reports/report_rebound.txt");
+std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/hilarios/src/reports/frame_RK.txt");
 // Window Size Settings
 constexpr unsigned int SCR_WIDTH = 1000;
 constexpr unsigned int SCR_HEIGHT = 1000;
 
-//constexpr unsigned int SIZE_COORD_GRID = 4;
+// constexpr unsigned int SIZE_COORD_GRID = 4;
 
 constexpr unsigned int NUMBER_OF_SECTIONS = 18;
 constexpr unsigned int ROCK_VERTEX_DATA_SIZE = (NUMBER_OF_SECTIONS + 1) * 6;
@@ -54,6 +56,28 @@ void transformVertices(float *vertices, int numVertices, const glm::mat4 &transf
     }
 }
 
+void print_rk(float t, float center_mass_x, float center_mass_y, float vx, float vy, float theta, Speed_F_Normal speed)
+{
+    Frame_Rk << "T: " << t << " (center_mass_x,center_mass_y): (" << center_mass_x << " , " << center_mass_y << ") vx: " << vx << " vy: " << vy << " giro (rads): " << theta << " Mg: " << speed.M_G << " F_normal: (" << speed.F_normal.first << " , " << speed.F_normal.second << ") F_tangential : (" << speed.F_tangential.first << " , " << speed.F_tangential.second << ")" << endl;
+}
+
+void print_vertex(float out_vertex[], float theta)
+{
+    report << theta << endl;
+    for (int i = 0; i < NUMBER_OF_SECTIONS + 1; ++i)
+    {
+        report << "Vertex " << i << ": (" << (out_vertex[i * 6 + 0]) << ", " << (out_vertex[i * 6 + 1]) << ", " << (out_vertex[i * 6 + 2]) << ")" << endl;
+    }
+    report << endl
+           << endl;
+}
+
+void print_report(float t, float out_vertex[], PointContact point, Speed_F_Normal speed)
+{
+    rebound << " Second: " << t << "\t\t\t\t\t (X,Y): (" << out_vertex[0] << "," << out_vertex[1] << ") \t Sig_n: (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t D_Sig_n : (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t D_Sig_t: (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t F_normal : " << speed.FN << "\t (" << speed.F_normal.first << " i, " << speed.F_normal.second << " j) \t F_tangential: " << speed.Ft << " \t (" << speed.F_tangential.first << "i , " << speed.F_tangential.second << ") \t"
+            << "\t Mg : " << speed.M_G << endl;
+}
+
 /*****************************************************************************/
 int main()
 {
@@ -72,9 +96,9 @@ int main()
     gil::Shader slopeShader("slope");
     gil::Shader gridShader("grid");
 
-    std::ofstream report("C:/Users/Usuario/Desktop/hilarios/src/reportes/report.txt");
-    std::ofstream rebound("C:/Users/Usuario/Desktop/hilarios/src/reportes/report_rebound.txt");
-    std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/hilarios/src/reportes/frame_RK.txt");
+    std::ofstream report("C:/Users/Usuario/Desktop/hilarios/src/reports/report.txt");
+    std::ofstream rebound("C:/Users/Usuario/Desktop/hilarios/src/reports/report_rebound.txt");
+    std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/hilarios/src/reports/frame_RK.txt");
     /*****************************************************************************/
 
     // Initial Setup Stuff
@@ -83,21 +107,12 @@ int main()
     float scale = 30.0f;
 
     float center_mass_x = 0.0f;
-    float center_mass_y = 14.0f;
+    float center_mass_y = 16.0f;
 
-    float transformation_x = center_mass_x / scale;
-    float transformation_y = center_mass_y / scale;
+    float a = 1.1f;
+    float b = 0.8f;
 
-    glm::vec2 pos_init = glm::vec2(transformation_x, transformation_y);
-
-    // Non-scaled radius => Scaled radius
-    float radio_major = 1.1f;
-    float radio_minor = 0.8f;
-
-    float a = radio_major / scale;
-    float b = radio_minor / scale;
-
-    // Rock Computing Utils [Runge Kutta]
+    // Rock Computing Utils [RK]
     float vx = 0.5f;
     float vy = 0.0f;
     float theta = 0.0f * M_PI / 180.0f;
@@ -124,29 +139,16 @@ int main()
     // slope raw data
     // float slope[SIZE_COORD_GRID * 3];
 
-    float slope[] = {
+    float slope_vertex_data[] = {
         0.0f, 12.2f, 0.0f,
-        3.05f, 0.0f, 0.0f,
+        3.05f, 0.0f, 0.0f
 
-        3.05f, 0.0f, 0.0f,
-        13.0f, 2.4888, 0.0f};
+        /*3.05f, 0.0f, 0.0f,
+        13.0f, 2.4888, 0.0f*/
+    };
 
-    float slope_vertex_data[6] = {0};
-
-    for (int i = 0; i < 6; ++i)
-    {
-        slope_vertex_data[i] = slope[i] / scale;
-    }
-
-    /*for (int i = 0; i < 6; ++i)
-    {
-        cout << slope_vertex_data[i] << " ";
-    }
-
-    cout << endl;*/
-
-    /*float slope_vertex_data[6] = {
-        0.7f, 0.0f, 0.0f, 0.0f, 0.41f, 0.0f};*/
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 proj = glm::ortho(-scale, scale, -scale, scale, -1.0f, 1.0f);
 
     /*****************************************************************************/
 
@@ -220,7 +222,7 @@ int main()
     float tf = 50.0f;
     float MG = 0.0f;
     float w = 0.2f;
-    static const float h = 0.00001f;
+    static const float h = 0.01f;
 
     int i = 0;
     float t = 0.0f;
@@ -228,7 +230,7 @@ int main()
     PointContact point(ellipse);
     Speed_F_Normal speed(ellipse);
 
-    RungeKutta rk(ellipse);
+    Move rk(ellipse);
 
     gil::Timer timer(true);
 
@@ -247,94 +249,60 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Rendering Stuff
-        glm::mat4 transform = glm::mat4(1.0f);
+        glm::mat4 model_rock_shader = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);
 
         if (i < tf / h)
         {
             t = t0 + i * h;
+            print_rk(t, center_mass_x, center_mass_y, vx, vy, theta, speed);
+            rk.movement(vx, vy, center_mass_x, center_mass_y, theta, w, speed.M_G, h, t, i, speed.F_normal, speed.F_tangential);
 
-            Frame_Rk << "T: " << t << " (center_mass_x,center_mass_y): (" << center_mass_x << " , " << center_mass_y << ") vx: " << vx << " vy: " << vy << " giro (rads): " << theta << " Mg: " << speed.M_G << " F_normal: (" << speed.F_normal.first << " , " << speed.F_normal.second << ") F_tangential : (" << speed.F_tangential.first << " , " << speed.F_tangential.second << ")" << endl;
-
-            rk.runge_kutta(vx, vy, center_mass_x, center_mass_y, theta, w, speed.M_G, h, t, i, speed.F_normal, speed.F_tangential);
-
-            float transform_x = static_cast<float>(center_mass_x/scale);
-            float transform_y = static_cast<float>(center_mass_y/scale);
-
-            transform = glm::translate(transform, glm::vec3(transform_x, transform_y, 0.0f));
-            transform = glm::rotate(transform, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
+            model_rock_shader = glm::translate(model_rock_shader, glm::vec3(center_mass_x, center_mass_y, 0.0f));
+            model_rock_shader = glm::rotate(model_rock_shader, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
 
             float out_vertex[ROCK_VERTEX_DATA_SIZE];
             memcpy(out_vertex, rock_vertex_data, sizeof(rock_vertex_data));
-            transformVertices(out_vertex, NUMBER_OF_SECTIONS, transform);
+            transformVertices(out_vertex, NUMBER_OF_SECTIONS, model_rock_shader);
 
-            report << theta << endl;
-            for (int i = 0; i < NUMBER_OF_SECTIONS + 1; ++i)
-            {
-                report << "Vertex " << i << ": (" << (out_vertex[i * 6 + 0]) << ", " << (out_vertex[i * 6 + 1]) << ", " << (out_vertex[i * 6 + 2]) << ")" << endl;
-            }
-            report << endl
-                   << endl;
+            print_vertex(out_vertex, theta);
 
             point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data);
+
             if (point.collision == true)
             {
-                // I pass you vertices of the virtual world
-                //point.collision = false;
                 speed.momentos(out_vertex[0], out_vertex[1], vx, vy, theta, h, slope_vertex_data);
-
-                rebound << " Second: " << t << "\t\t\t\t\t (X,Y): (" << out_vertex[0] << "," << out_vertex[1] << ") (" << out_vertex[0]*scale << "," << out_vertex[1]*scale<< ") \t Sig_n: (" << point.perpendicular.first << "\t" << point.perpendicular.second << ") \t D_Sig_n : (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t D_Sig_t: (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t F_normal : " << speed.FN << "\t (" << speed.F_normal.first << " i, " << speed.F_normal.second << " j) \t F_tangential: " << speed.Ft << " \t (" << speed.F_tangential.first << "i , " << speed.F_tangential.second << ") \t"
-                        << "\t Mg : " << speed.M_G << endl;
-                //return 0;
+                print_report(t, out_vertex, point, speed);
+                point.collision = false;
+                // return 0;
             }
 
             i++;
         }
 
-        else if (i == tf / h)
-        {
-            t = t0 + i * h;
-            rk.runge_kutta(vx, vy, center_mass_x, center_mass_y, theta, w, MG, h, t, i, speed.F_normal, speed.F_tangential);
-
-            float transform_x = center_mass_x / scale;
-            float transform_y = center_mass_y / scale;
-
-            transform = glm::translate(transform, glm::vec3(transform_x, transform_y, 0.0f));
-            transform = glm::rotate(transform, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
-
-            float out_vertex[ROCK_VERTEX_DATA_SIZE];
-            memcpy(out_vertex, rock_vertex_data, sizeof(rock_vertex_data));
-            transformVertices(out_vertex, NUMBER_OF_SECTIONS, transform);
-
-            point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data);
-            if (point.collision == true)
-            {
-                speed.momentos(out_vertex[0], out_vertex[1], vx, vy, theta, h, slope_vertex_data);
-
-                rebound << "(" << center_mass_x << "," << center_mass_y << ") \t (" << point.perpendicular.first * scale << "\t" << point.perpendicular.second * scale << ") \t (" << speed.velocity_sigma[2] << " i " << speed.velocity_sigma[3] << " j) \t (" << speed.velocity_sigma[0] << " i " << speed.velocity_sigma[1] << " j) \t\t " << speed.FN << "\t" << speed.Ft << "\t"
-                        << "\t " << speed.M_G << endl;
-                MG = speed.M_G;
-                //return 0;
-            }
-        }
+        slopeShader.use();
+        slopeShader.setMat4("model", model);
+        slopeShader.setMat4("view", view);
+        slopeShader.setMat4("proj", proj);
+        glBindVertexArray(VAO_slope);
+        glDrawArrays(GL_LINES, 0, 100);
 
         gridShader.use();
         glBindVertexArray(VAO_grid);
         glDrawArrays(GL_LINES, 0, 100);
 
-        slopeShader.use();
-        glBindVertexArray(VAO_slope);
-        glDrawArrays(GL_LINES, 0, 100);
-
         rockShader.use();
-        rockShader.setMat4("transform", transform);
+        rockShader.setMat4("model", model_rock_shader);
+        rockShader.setMat4("view", view);
+        rockShader.setMat4("proj", proj);
         glBindVertexArray(VAO_rock);
         glDrawElements(GL_TRIANGLES, ROCK_VERTEX_DATA_SIZE, GL_UNSIGNED_INT, (const void *)0);
 
         // Post Tick Calls
         window.swapBuffers();
-        //timer.tick();
+        // timer.tick();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);

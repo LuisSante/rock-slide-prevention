@@ -1,5 +1,5 @@
-#ifndef RK_HPP
-#define RK_HPP
+#ifndef MOVE_HPP
+#define MOVE_HPP
 
 #include <iostream>
 #include <vector>
@@ -10,54 +10,50 @@
 
 using namespace std;
 
-class RungeKutta
+class Move
 {
 private:
-    // Atributos de la elipse
     Draw draw;
-    // RK
+
     float mass = 120.0f;
     const float g = 9.81f;
     float I;
 
 public:
-    RungeKutta();
-    RungeKutta(Draw &draw);
+    Move();
+    Move(Draw &draw);
 
-    // sumatoria de forces
     float Fx(float Fni, float Fti);
     float Fy(float Fnj, float Ftj);
-    void runge_kutta(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft);
+    void movement(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft);
 
     friend class Superposition;
     friend class Speed_F_Normal;
 };
 
-RungeKutta::RungeKutta() : draw()
+Move::Move() : draw()
 {
     I = 0;
 };
 
-RungeKutta::RungeKutta(Draw &draw) : draw(draw)
+Move::Move(Draw &draw) : draw(draw)
 {
     I = mass * ((draw.a * draw.b) * (draw.a * draw.a + draw.b * draw.b)) / 4.0f;
 }
 
-// Funciones para calcular las forces en x e y
-float RungeKutta::Fx(float Fni, float Fti)
+float Move::Fx(float Fni, float Fti)
 {
     float fx = (Fni + Fti + 0) / mass;
     return fx;
 }
 
-float RungeKutta::Fy(float Fnj, float Ftj)
+float Move::Fy(float Fnj, float Ftj)
 {
     float fy = (Fnj + Ftj + (-mass * g)) / mass;
     return fy;
 }
 
-// Function para implementar el método de Runge-Kutta de cuarto orden
-void RungeKutta::runge_kutta(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft)
+void Move::movement(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft)
 {
     float k1x, k2x, k3x, k4x, k1y, k2y, k3y, k4y, k1vx, k2vx, k3vx, k4vx, k1vy, k2vy, k3vy, k4vy;
     float k1omega, k2omega, k3omega, k4omega, k1theta, k2theta, k3theta, k4theta;

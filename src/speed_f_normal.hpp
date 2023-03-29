@@ -10,7 +10,7 @@
 #include <cmath>
 
 #include "draw.hpp"
-#include "punto_contacto.hpp"
+#include "collision.hpp"
 
 #ifdef M_PI
 #undef M_PI
@@ -116,7 +116,7 @@ vector<float> Speed_F_Normal::vector_rc(float current_center_mass_X, float curre
     cout << " angle : " << angle << endl;
     vector<float> result = {};
 
-    vector<float> point_middle = contact.machine(current_center_mass_X/30, current_center_mass_Y/30, vertex_slope);
+    vector<float> point_middle = contact.machine(current_center_mass_X, current_center_mass_Y, vertex_slope);
 
     double r1 = (current_center_mass_X - point_middle[2]) * (current_center_mass_X - point_middle[2]);
     double r2 = (current_center_mass_Y - point_middle[3]) * (current_center_mass_Y - point_middle[3]);
@@ -157,15 +157,11 @@ vector<float> Speed_F_Normal::velocity_vec_contact(float current_center_mass_X, 
     cout << "vc_i: " << vc_i << " vc_j: " << vc_j << endl;
 
     // Vectors_unitarians
-    float t1 = vertex_slope[0] * 30;
-    float t2 = vertex_slope[1] * 30;
-    float t3 = vertex_slope[3] * 30;
-    float t4 = vertex_slope[4] * 30;
-    float distance = euclidean_distance(t1, t2, t3, t4);
+    float distance = euclidean_distance(vertex_slope[0], vertex_slope[1], vertex_slope[3], vertex_slope[4]);
 
-    float w_i = (t3 - t1) / distance;
+    float w_i = (vertex_slope[3] - vertex_slope[0]) / distance;
     vectors_contact.push_back(w_i);
-    float w_j = (t4 - t2) / distance;
+    float w_j = (vertex_slope[4] - vertex_slope[1]) / distance;
     vectors_contact.push_back(w_j);
     float e_i = w_j;
     vectors_contact.push_back(e_i);
@@ -200,13 +196,11 @@ void Speed_F_Normal::velocity(float current_center_mass_X, float current_center_
 
 float Speed_F_Normal::radio_equivalent()
 {
-    float a = draw.a * 30;    
-    float b = draw.b * 30;
     float A_prima = 0, B_prima = 0;
     float r_star;
 
-    A_prima = 0.5f * (1 / (a));
-    B_prima = 0.5f * (1 / (b));
+    A_prima = 0.5f * (1 / (draw.a));
+    B_prima = 0.5f * (1 / (draw.b));
 
     r_star = 1 / (2 * sqrt(A_prima * B_prima));
 
@@ -262,7 +256,7 @@ float Speed_F_Normal::gamma_t()
 
 void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float vertex_slope[])
 {
-    contact.superposition(current_center_mass_X / 30 , current_center_mass_Y / 30, vertex_slope);
+    contact.superposition(current_center_mass_X, current_center_mass_Y, vertex_slope);
     float module = contact.perpendicular.second;
     if (module < 0)
         module = -module;
@@ -271,7 +265,7 @@ void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float c
     float r_star = radio_equivalent();
     float k_n = 2 * E_star * sqrt((r_star * module));
     float kn_module_sigma = k_n * module; // e
-    velocity_report << "modulo: " << module << endl; 
+    velocity_report << "modulo: " << module << endl;
     velocity_report << "E_star " << E_star << endl;
     velocity_report << "r_star " << r_star << endl;
     velocity_report << "kn: " << k_n << endl;
@@ -292,8 +286,6 @@ void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float c
     // Force buffer
     float gama = gamma_n();
     float cn = 2 * gama * sqrt(m_star * k_n);
-    cout << " gama : "<<gama <<endl;
-    cout << " Cn : " << cn <<endl;
 
     velocity(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope); /*sigma_point[2]i y sigma_point[3]j pos*/
 
@@ -339,7 +331,7 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
     cout << " current_velocity_Y : " << current_velocity_Y << endl;
     cout << " angle : " << angle << endl;
 
-    contact.superposition(current_center_mass_X / 30, current_center_mass_Y / 30, vertex_slope);
+    contact.superposition(current_center_mass_X, current_center_mass_Y, vertex_slope);
 
     float module = contact.perpendicular.second;
     if (module < 0)
@@ -419,20 +411,16 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
 
     Ft = sqrt((Ft_i * Ft_i) + (Ft_j * Ft_j));
 
-    cout << "Antes de entrar a la condicion Ft : " << Ft << endl;
-    cout << "Antes de entrar a la condicion Ft_i : " << Ft_i << endl;
-    cout << "Antes de entrar a la condicion Ft_j : " << Ft_j << endl;
-
     if (Ft >= mu_fn)
     {
-        cout << "ENTRO AL IF" << endl;
+        cout << "ACCESS IF" << endl;
         Ft = mu_fn;
         F_tangential.first = mu_fn_i;
         F_tangential.second = mu_fn_j;
     }
     else
     {
-        cout << "ENTRO AL ELSE" << endl;
+        cout << "ACCESS ELSE" << endl;
         F_tangential.first = Ft_i;
         F_tangential.second = Ft_j;
     }
@@ -449,8 +437,6 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
 
 void Speed_F_Normal::momentos(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float h, float vertex_slope[])
 {
-    current_center_mass_X = current_center_mass_X * 30;
-    current_center_mass_Y = current_center_mass_Y * 30;
     vector<float> rc = vector_rc(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope);
     calculate_normal_force(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, vertex_slope);
     calculate_tangential_force(current_center_mass_X, current_center_mass_Y, current_velocity_X, current_velocity_Y, angle, h, vertex_slope);
