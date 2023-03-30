@@ -3,8 +3,12 @@
 #include <engine/common.hpp>
 #include <engine/native.hpp>
 
+template <typename E>
+class EntityManager;
+
 class Entity2D
 {
+    friend class EntityManager<Entity2D>;
 public:
     virtual void Destroy() = 0;
     virtual void Print() = 0;
@@ -23,6 +27,7 @@ protected:
 
 class Entity
 {
+    friend class EntityManager<Entity>;
 public:
     virtual void Destroy() = 0;
     virtual void Print() = 0;

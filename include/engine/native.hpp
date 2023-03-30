@@ -2,7 +2,11 @@
 
 #include <engine/common.hpp>
 
+#include <list>
 #include <vector>
+
+template <typename T>
+using TList = std::list<T>;
 
 template <typename T>
 using TArray = std::vector<T>;

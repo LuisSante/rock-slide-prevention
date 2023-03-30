@@ -14,3 +14,5 @@ const FLinearColor FLinearColor::Green{ 0.0f, 1.0f, 0.0f };
 const FLinearColor FLinearColor::Blue{ 0.0f, 0.0f, 1.0f };
 
 const FQuat FQuat::Identity{ 1.0f, 0.0f, 0.0f, 0.0f };
+
+uint32 FResource::Count{ 0 };

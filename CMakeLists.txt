@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(ROCK_SLIDE)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_SOURCE_DIR}>/bin)
 #add_executable(main src/main.cpp src/glad.c)
 add_executable(main src/main.cpp src/engine/native.cpp src/entities/rockEntity.cpp)

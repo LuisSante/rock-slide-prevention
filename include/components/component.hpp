@@ -6,7 +6,7 @@
 struct BaseComponent
 {
 public:
-    struct Entity* OwnerEntity;
+    struct Entity2D* OwnerEntity;
 };
 
 template <typename T>

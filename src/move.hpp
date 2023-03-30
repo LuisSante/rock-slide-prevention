@@ -56,35 +56,35 @@ float Move::Fy(float Fnj, float Ftj)
 void Move::movement(float &velocity_x, float &velocity_y, float &position_x, float &position_y, float &theta, float &w, float &MG, float h, float t, int i, pair<float, float> &Fn, pair<float, float> &Ft)
 {
     float k1x, k2x, k3x, k4x, k1y, k2y, k3y, k4y, k1vx, k2vx, k3vx, k4vx, k1vy, k2vy, k3vy, k4vy;
-    float k1omega, k2omega, k3omega, k4omega, k1theta, k2theta, k3theta, k4theta;
+    float k1w, k2w, k3w, k4w, k1theta, k2theta, k3theta, k4theta;
     float derivative_w = MG / I;
 
     k1vx = Fx(Fn.first, Ft.first);
     k1vy = Fy(Fn.second, Ft.second);
     k1x = velocity_x;
     k1y = velocity_y;
-    k1omega = derivative_w;
+    k1w = derivative_w;
     k1theta = w + derivative_w * t;
 
     k2vx = Fx(Fn.first, Ft.first);
     k2vy = Fy(Fn.second, Ft.second);
     k2x = velocity_x + k1vx * h / 2.0f;
     k2y = velocity_y + k1vy * h / 2.0f;
-    k2omega = derivative_w;
+    k2w = derivative_w;
     k2theta = w + derivative_w * (t + 0.5f * h);
 
     k3vx = Fx(Fn.first, Ft.first);
     k3vy = Fy(Fn.second, Ft.second);
     k3x = velocity_x + k2vx * h / 2.0f;
     k3y = velocity_y + k2vy * h / 2.0f;
-    k3omega = derivative_w;
+    k3w = derivative_w;
     k3theta = w + derivative_w * (t + 0.5f * h);
 
     k4vx = Fx(Fn.first, Ft.first);
     k4vy = Fy(Fn.second, Ft.second);
     k4x = velocity_x + k3vx * h;
     k4y = velocity_y + k3vy * h;
-    k4omega = derivative_w;
+    k4w = derivative_w;
     k4theta = w + derivative_w * (t + h);
 
     position_x += (h / 6.0f) * (k1x + 2.0f * k2x + 2.0f * k3x + k4x);

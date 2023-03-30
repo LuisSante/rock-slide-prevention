@@ -1,6 +1,7 @@
 /*****************************************************************************/
 
 #include <HSGIL/hsgil.hpp>
+#include <ecs.hpp>
 
 #include <chrono>
 #include <thread>
@@ -23,6 +24,7 @@ using std::vector;
 std::ofstream report("C:/Users/Usuario/Desktop/hilarios/src/reports/report.txt");
 std::ofstream rebound("C:/Users/Usuario/Desktop/hilarios/src/reports/report_rebound.txt");
 std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/hilarios/src/reports/frame_RK.txt");
+std::ofstream Rocks_Out("C:/Users/Usuario/Desktop/hilarios/src/reports/Rocks_Out.txt");
 // Window Size Settings
 constexpr unsigned int SCR_WIDTH = 1000;
 constexpr unsigned int SCR_HEIGHT = 1000;
@@ -96,9 +98,9 @@ int main()
     gil::Shader slopeShader("slope");
     gil::Shader gridShader("grid");
 
-    std::ofstream report("C:/Users/Usuario/Desktop/hilarios/src/reports/report.txt");
-    std::ofstream rebound("C:/Users/Usuario/Desktop/hilarios/src/reports/report_rebound.txt");
-    std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/hilarios/src/reports/frame_RK.txt");
+    std::ofstream report("../src/reports/report.txt");
+    std::ofstream rebound("../src/reports/report_rebound.txt");
+    std::ofstream Frame_Rk("../src/reports/frame_RK.txt");
     /*****************************************************************************/
 
     // Initial Setup Stuff
@@ -107,7 +109,7 @@ int main()
     float scale = 30.0f;
 
     float center_mass_x = 0.0f;
-    float center_mass_y = 16.0f;
+    float center_mass_y = 26.0f;
 
     float a = 1.1f;
     float b = 0.8f;
@@ -139,7 +141,7 @@ int main()
     // slope raw data
     // float slope[SIZE_COORD_GRID * 3];
 
-    float slope_vertex_data[] = {
+    float slope_vertex_data[6] = {
         0.0f, 12.2f, 0.0f,
         3.05f, 0.0f, 0.0f
 
@@ -232,8 +234,7 @@ int main()
 
     Move rk(ellipse);
 
-    gil::Timer timer(true);
-
+    gil::Timer timer;
     while (window.isActive())
     {
         // Pre Tick calls
@@ -265,16 +266,19 @@ int main()
             memcpy(out_vertex, rock_vertex_data, sizeof(rock_vertex_data));
             transformVertices(out_vertex, NUMBER_OF_SECTIONS, model_rock_shader);
 
+            float angle_degrees = theta * 180 / 3.14;
+
             print_vertex(out_vertex, theta);
 
-            point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data);
+            point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data, angle_degrees);
 
             if (point.collision == true)
             {
-                speed.momentos(out_vertex[0], out_vertex[1], vx, vy, theta, h, slope_vertex_data);
+                speed.momentos(out_vertex[0], out_vertex[1], vx, vy, angle_degrees, w, h, slope_vertex_data);
                 print_report(t, out_vertex, point, speed);
                 point.collision = false;
-                // return 0;
+                window.close();
+                continue;
             }
 
             i++;
@@ -300,9 +304,9 @@ int main()
 
         // Post Tick Calls
         window.swapBuffers();
-        // timer.tick();
+        timer.tick();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(300));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
@@ -314,6 +318,14 @@ int main()
 
     glDeleteVertexArrays(1, &VAO_slope);
     glDeleteBuffers(1, &VBO_slope);
+
+    EntityManager<RockEntity> rockEntityManager;
+    for (int i = 0; i < 1000; ++i)
+    {
+        RockEntity* rock = rockEntityManager.CreateEntity();
+        rock->Init(1.0f, 1.0f, Rocks_Out);
+    }
+    rockEntityManager.PrintEntities();
 
     return 0;
 }
