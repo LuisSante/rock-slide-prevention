@@ -98,9 +98,9 @@ int main()
     gil::Shader slopeShader("slope");
     gil::Shader gridShader("grid");
 
-    std::ofstream report("../src/reports/report.txt");
-    std::ofstream rebound("../src/reports/report_rebound.txt");
-    std::ofstream Frame_Rk("../src/reports/frame_RK.txt");
+    // std::ofstream report("../src/reports/report.txt");
+    // std::ofstream rebound("../src/reports/report_rebound.txt");
+    // std::ofstream Frame_Rk("../src/reports/frame_RK.txt");
     /*****************************************************************************/
 
     // Initial Setup Stuff
@@ -256,37 +256,6 @@ int main()
         glm::mat4 model_rock_shader = glm::mat4(1.0f);
         glm::mat4 model = glm::mat4(1.0f);
 
-        if (i < tf / h)
-        {
-            t = t0 + i * h;
-            print_rk(t, center_mass_x, center_mass_y, vx, vy, theta, speed);
-            rk.movement(vx, vy, center_mass_x, center_mass_y, theta, w, speed.M_G, h, t, i, speed.F_normal, speed.F_tangential);
-
-            model_rock_shader = glm::translate(model_rock_shader, glm::vec3(center_mass_x, center_mass_y, 0.0f));
-            model_rock_shader = glm::rotate(model_rock_shader, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
-
-            float out_vertex[ROCK_VERTEX_DATA_SIZE];
-            memcpy(out_vertex, rock_vertex_data, sizeof(rock_vertex_data));
-            transformVertices(out_vertex, NUMBER_OF_SECTIONS, model_rock_shader);
-
-            float angle_degrees = theta * 180 / 3.14;
-
-            print_vertex(out_vertex, theta);
-
-            point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data, angle_degrees);
-
-            if (point.collision == true)
-            {
-                speed.momentos(out_vertex[0], out_vertex[1], vx, vy, angle_degrees, w, h, slope_vertex_data);
-                print_report(t, out_vertex, point, speed);
-                point.collision = false;
-                window.close();
-                continue;
-            }
-
-            i++;
-        }
-
         slopeShader.use();
         slopeShader.setMat4("model", model);
         slopeShader.setMat4("view", view);
@@ -297,6 +266,34 @@ int main()
         gridShader.use();
         glBindVertexArray(VAO_grid);
         glDrawArrays(GL_LINES, 0, 100);
+
+        t = i * h;
+        print_rk(t, center_mass_x, center_mass_y, vx, vy, theta, speed);
+        rk.movement(vx, vy, center_mass_x, center_mass_y, theta, w, speed.M_G, h, t, i, speed.F_normal, speed.F_tangential);
+
+        model_rock_shader = glm::translate(model_rock_shader, glm::vec3(center_mass_x, center_mass_y, 0.0f));
+        model_rock_shader = glm::rotate(model_rock_shader, (float)theta, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        float out_vertex[ROCK_VERTEX_DATA_SIZE];
+        memcpy(out_vertex, rock_vertex_data, sizeof(rock_vertex_data));
+        transformVertices(out_vertex, NUMBER_OF_SECTIONS, model_rock_shader);
+
+        float angle_degrees = theta * 180 / 3.14;
+
+        print_vertex(out_vertex, theta);
+
+        point.superposition(out_vertex[0], out_vertex[1], slope_vertex_data, angle_degrees);
+
+        if (point.collision == true)
+        {
+            speed.momentos(out_vertex[0], out_vertex[1], vx, vy, angle_degrees, w, h, slope_vertex_data);
+            print_report(t, out_vertex, point, speed);
+            point.collision = false;
+            window.close();
+            continue;
+        }
+
+        i++;
 
         rockShader.use();
         rockShader.setMat4("model", model_rock_shader);

@@ -10,11 +10,8 @@
 #include <cmath>
 
 #include "draw.hpp"
-// #include "algoritmos.hpp"
 
 using namespace std;
-
-// constexpr int MAX_DIMENSION = 100;
 
 std::ofstream impact("../src/reports/impact.txt");
 
@@ -161,11 +158,6 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
 {
     vector<float> middle;
 
-    // cout << " draw.a : " << draw.a << endl;
-    // cout << " draw.b : " << draw.b << endl;
-    // cout << " current_center_mass_X : " << current_center_mass_X << endl;
-    // cout << " current_center_mass_Y : " << current_center_mass_Y << endl;
-
     fill_matrix(theta);
     calculate_inverse();
 
@@ -176,8 +168,6 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
 
     middle.push_back(ml);
     middle.push_back(bl);
-
-    // cout << " ml: " << ml << " bl: " << bl << endl;
 
     // Quadratic equation
     double e_a = ((ml * ml) + 1);
@@ -203,8 +193,6 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
         part_imagine = discriminant_root / (2 * e_a);
         collision = false;
     }
-
-    // Root
 
     double p1 = 0, p2 = 0;
     double _x_1 = 0, _y_1 = 0, _x_2 = 0, _y_2 = 0;
@@ -232,7 +220,6 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
 
 void PointContact::superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_slope[], float theta)
 {
-    // cout << " ANGULO : " << theta << endl;
     vector<float> point_middle = point_collision(current_center_mass_X, current_center_mass_Y, vertices_slope, theta);
     float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
@@ -249,7 +236,6 @@ void PointContact::superposition(float current_center_mass_X, float current_cent
     double yA1_ = ((matrix_angles[1][0] * xA1) + (matrix_angles[1][1] * yA1)) + current_center_mass_Y;
     double xA2_ = ((matrix_angles[0][0] * xA2) + (matrix_angles[0][1] * yA2)) + current_center_mass_X;
     double yA2_ = ((matrix_angles[1][0] * xA2) + (matrix_angles[1][1] * yA2)) + current_center_mass_Y;
-    // cout << xA1_ << " " << yA1_ << " " << xA2_ << " " << yA2_ << endl;
 
     double A = -(vertices_slope[4] - vertices_slope[1]) / (vertices_slope[3] - vertices_slope[0]);
     double B = 1;

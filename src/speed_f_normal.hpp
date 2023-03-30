@@ -288,10 +288,6 @@ void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float c
     F_normal.second = FN_j;
 
     velocity_report << " Fn_i " << F_normal.first << " Fn_j " << F_normal.second << endl;
-    //cout << " Fn_i " << F_normal.first << " Fn_j " << F_normal.second << endl;
-
-    /*velocity_report << "CLASS SPEED "
-         << "FN_I : " << FN_i << " Fn_j : " << FN_j << endl;*/
 
     FN = sqrt((FN_i * FN_i) + (FN_j * FN_j));
 }
@@ -304,12 +300,6 @@ float Speed_F_Normal::coefficient_friction(float current_center_mass_X, float cu
 
 void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float w , float h, float vertex_slope[])
 {
-    //cout << " current_center_mass_X : " << current_center_mass_X << endl;
-    //cout << " current_center_mass_Y : " << current_center_mass_Y << endl;
-    //cout << " current_velocity_X : " << current_velocity_X << endl;
-    //cout << " current_velocity_Y : " << current_velocity_Y << endl;
-    //cout << " angle : " << angle << endl;
-
     contact.superposition(current_center_mass_X, current_center_mass_Y, vertex_slope, angle);
 
     float module = contact.perpendicular.second;
@@ -363,21 +353,15 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
 
     if (Ft >= mu_fn)
     {
-        //cout << "ACCESS IF" << endl;
         Ft = mu_fn;
         F_tangential.first = mu_fn_i;
         F_tangential.second = mu_fn_j;
     }
     else
     {
-        //cout << "ACCESS ELSE" << endl;
         F_tangential.first = Ft_i;
         F_tangential.second = Ft_j;
     }
-
-    //cout << " Ft : " << Ft << endl;
-    //cout << " Ft_i : " << F_tangential.first << endl;
-    //cout << " Ft_j : " << F_tangential.second << endl;
 
     velocity_report << "CLASS SPEED "
                     << "Ft_i : " << F_tangential.first << " Ft_j : " << F_tangential.second << endl;
@@ -394,12 +378,7 @@ void Speed_F_Normal::momentos(float current_center_mass_X, float current_center_
     float f_total_i = F_normal.first + F_tangential.first;
     float f_total_j = F_normal.second + F_tangential.second;
 
-    //cout << " f_total_i : " << f_total_i << endl;
-    //cout << " f_total_j : " << f_total_j << endl;
-
     M_G = (rc[0] * f_total_j) - (rc[1] * f_total_i);
-
-    //cout << " M_G : " << M_G << endl;
 }
 
 #endif

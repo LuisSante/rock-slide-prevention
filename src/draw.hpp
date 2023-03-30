@@ -91,7 +91,6 @@ void Draw::vertex_ellipse(float vertex_data[])
 
 void Draw::index_ellipse(unsigned int index[])
 {
-    // llenar el array de index
     int current_index_base = 1;
     for (int j = 0; j < number_of_sections; ++j)
     {
