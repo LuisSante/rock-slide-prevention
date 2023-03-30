@@ -16,7 +16,7 @@ using namespace std;
 
 // constexpr int MAX_DIMENSION = 100;
 
-std::ofstream impact("C:/Users/Usuario/Desktop/hilarios/src/reports/impact.txt");
+std::ofstream impact("../src/reports/impact.txt");
 
 class PointContact
 {
@@ -99,9 +99,9 @@ void PointContact::print_matrix(float matrix[2][2])
     {
         for (int j = 0; j < 2; j++)
         {
-            //cout << matrix[i][j] << "\t";
+            cout << matrix[i][j] << "\t";
         }
-        //cout << endl;
+        cout << endl;
     }
 }
 
@@ -139,13 +139,6 @@ vector<float> PointContact::locales(float current_center_mass_X, float current_c
         vertices_locales_slope[i] = vertices_slope_[i] - vertices_difference[i];
     }
 
-    //cout << "Local" << endl;
-    for (int i = 0; i < 6; i++)
-    {
-        //cout << vertices_locales_slope[i] << " ";
-    }
-    //cout << endl;
-
     float x1_ellipse_local = vertices_locales_slope[0];
     float y1_ellipse_local = vertices_locales_slope[1];
     float x2_ellipse_local = vertices_locales_slope[3];
@@ -161,14 +154,6 @@ vector<float> PointContact::locales(float current_center_mass_X, float current_c
     local_middles.push_back(x2_);
     local_middles.push_back(y2_);
 
-    //cout << "LOCAL FUNCTION" << endl;
-    for (int i = 0; i < local_middles.size(); i++)
-    {
-        //cout << local_middles[i] << " ";
-    }
-    //cout << endl
-         //<< endl;
-
     return local_middles;
 }
 
@@ -183,8 +168,6 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
 
     fill_matrix(theta);
     calculate_inverse();
-    print_matrix(matrix_angles);
-    print_matrix(inverse);
 
     vector<float> local_middles = locales(current_center_mass_X, current_center_mass_Y, vertices_slope, inverse);
 
@@ -194,7 +177,7 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
     middle.push_back(ml);
     middle.push_back(bl);
 
-    //cout << " ml: " << ml << " bl: " << bl << endl;
+    // cout << " ml: " << ml << " bl: " << bl << endl;
 
     // Quadratic equation
     double e_a = ((ml * ml) + 1);
@@ -244,21 +227,12 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
     middle.push_back(point_middle_x);
     middle.push_back(point_middle_y);
 
-    /*cout << "FUNCTION point_collision FOR THE POINTS MIDDLES " << endl;
-    cout << current_center_mass_X << " " << current_center_mass_Y << endl;
-    for (int i = 0; i < middle.size(); i++)
-    {
-        cout << middle[i] << " ";
-    }
-    cout << endl
-         << endl;*/
-
     return middle;
 }
 
 void PointContact::superposition(float current_center_mass_X, float current_center_mass_Y, float vertices_slope[], float theta)
 {
-    //cout << " ANGULO : " << theta << endl;
+    // cout << " ANGULO : " << theta << endl;
     vector<float> point_middle = point_collision(current_center_mass_X, current_center_mass_Y, vertices_slope, theta);
     float pA1 = (1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
     float pA2 = -(1 / (sqrt(1 + (point_middle[0] * point_middle[0]))));
@@ -270,17 +244,16 @@ void PointContact::superposition(float current_center_mass_X, float current_cent
     float yA1 = pA1 * draw.b;
     float xA2 = sA2 * draw.a;
     float yA2 = pA2 * draw.b;
-    
 
     double xA1_ = ((matrix_angles[0][0] * xA1) + (matrix_angles[0][1] * yA1)) + current_center_mass_X;
     double yA1_ = ((matrix_angles[1][0] * xA1) + (matrix_angles[1][1] * yA1)) + current_center_mass_Y;
     double xA2_ = ((matrix_angles[0][0] * xA2) + (matrix_angles[0][1] * yA2)) + current_center_mass_X;
     double yA2_ = ((matrix_angles[1][0] * xA2) + (matrix_angles[1][1] * yA2)) + current_center_mass_Y;
-    //cout << xA1_ << " " << yA1_ << " " << xA2_ << " " << yA2_ << endl;
+    // cout << xA1_ << " " << yA1_ << " " << xA2_ << " " << yA2_ << endl;
 
     double A = -(vertices_slope[4] - vertices_slope[1]) / (vertices_slope[3] - vertices_slope[0]);
     double B = 1;
-    
+
     double C = (-A * vertices_slope[3]) - vertices_slope[4];
 
     float per_1 = ((A * xA1_) + (B * yA1_) + C) / (sqrt((A * A) + (B * B)));

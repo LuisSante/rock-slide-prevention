@@ -19,7 +19,7 @@
 
 using namespace std;
 
-ofstream velocity_report("C:/Users/Usuario/Desktop/hilarios/src/reports/velocity_report.txt");
+ofstream velocity_report("..src/reports/velocity_report.txt");
 
 class Speed_F_Normal
 {

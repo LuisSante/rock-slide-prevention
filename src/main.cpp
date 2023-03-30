@@ -21,10 +21,10 @@
 #include "speed_f_normal.hpp"
 
 using std::vector;
-std::ofstream report("C:/Users/Usuario/Desktop/hilarios/src/reports/report.txt");
-std::ofstream rebound("C:/Users/Usuario/Desktop/hilarios/src/reports/report_rebound.txt");
-std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/hilarios/src/reports/frame_RK.txt");
-std::ofstream Rocks_Out("C:/Users/Usuario/Desktop/hilarios/src/reports/Rocks_Out.txt");
+std::ofstream report("../src/reports/report.txt");
+std::ofstream rebound("../src/reports/report_rebound.txt");
+std::ofstream Frame_Rk("../src/reports/frame_RK.txt");
+std::ofstream Rocks_Out("../src/reports/Rocks_Out.txt");
 // Window Size Settings
 constexpr unsigned int SCR_WIDTH = 1000;
 constexpr unsigned int SCR_HEIGHT = 1000;
@@ -142,7 +142,10 @@ int main()
     // float slope[SIZE_COORD_GRID * 3];
 
     float slope_vertex_data[6] = {
-        0.0f, 12.2f, 0.0f,
+        /*3.05f, 0.0f, 0.0f,
+        0.0f, 12.20f, 0.0f,*/
+
+        0.0f, 12.20f, 0.0f,
         3.05f, 0.0f, 0.0f
 
         /*3.05f, 0.0f, 0.0f,
@@ -221,7 +224,7 @@ int main()
     /*****************************************************************************/
 
     float t0 = 0.0f;
-    float tf = 50.0f;
+    float tf = 30.0f;
     float MG = 0.0f;
     float w = 0.2f;
     static const float h = 0.01f;
@@ -306,7 +309,7 @@ int main()
         window.swapBuffers();
         timer.tick();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
@@ -322,7 +325,7 @@ int main()
     EntityManager<RockEntity> rockEntityManager;
     for (int i = 0; i < 1000; ++i)
     {
-        RockEntity* rock = rockEntityManager.CreateEntity();
+        RockEntity *rock = rockEntityManager.CreateEntity();
         rock->Init(1.0f, 1.0f, Rocks_Out);
     }
     rockEntityManager.PrintEntities();
