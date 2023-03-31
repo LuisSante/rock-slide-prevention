@@ -21,9 +21,9 @@
 #include "speed_f_normal.hpp"
 
 using std::vector;
-std::ofstream report("../src/reports/report.txt");
+std::ofstream report("C:/Users/Usuario/Desktop/rock_slide/src/reports/report.txt");
 std::ofstream rebound("../src/reports/report_rebound.txt");
-std::ofstream Frame_Rk("../src/reports/frame_RK.txt");
+std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/rock_slide/src/reports/frame_RK.txt");
 std::ofstream Rocks_Out("../src/reports/Rocks_Out.txt");
 // Window Size Settings
 constexpr unsigned int SCR_WIDTH = 1000;

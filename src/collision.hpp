@@ -176,21 +176,18 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
 
     double s1 = 0, s2 = 0;
     double discriminant = (e_b * e_b) - 4 * e_a * e_c;
-    double discriminant_root = sqrt(abs(discriminant));
-    float real_part = 0.0f, part_imagine = 0.0f;
 
     impact << "discriminant : " << discriminant << endl;
 
     if (discriminant > 0 || discriminant == 0)
     {
+        double discriminant_root = sqrt(discriminant);
         s1 = (-e_b + discriminant_root) / (2 * e_a);
         s2 = (-e_b - discriminant_root) / (2 * e_a);
         collision = true;
     }
     else
     {
-        real_part = -e_b / (2 * e_a);
-        part_imagine = discriminant_root / (2 * e_a);
         collision = false;
     }
 
@@ -208,6 +205,21 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
     double _y1_ = ((matrix_angles[1][0] * _x_1) + (matrix_angles[1][1] * _y_1)) + current_center_mass_Y;
     double _x2_ = ((matrix_angles[0][0] * _x_2) + (matrix_angles[0][1] * _y_2)) + current_center_mass_X;
     double _y2_ = ((matrix_angles[1][0] * _x_2) + (matrix_angles[1][1] * _y_2)) + current_center_mass_Y;
+
+    cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
+
+    if ((_x1_ < 0 || _x2_ < 0) && discriminant >= 0)
+        collision = false;
+
+    // glm::vec2 upmost = (vertices_slope[1] > vertices_slope[4]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    // glm::vec2 bottommost = (vertices_slope[1] < vertices_slope[4]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    // glm::vec2 rightmost = (vertices_slope[0] > vertices_slope[3]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    // glm::vec2 leftmost = (vertices_slope[0] < vertices_slope[3]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    //
+    // if (_x1_ < leftmost.x && _x2_ < leftmost.x && _x1_ > rightmost.x && _x2_ > rightmost.x && discriminant >= 0)
+    //   collision = false;
+    // if (_y1_ < bottommost.y && _y2_ < bottommost.y && _y1_ > rightmost.y && _y2_ > rightmost.y && discriminant >= 0)
+    //   collision = false;
 
     float point_middle_x = (_x1_ + _x2_) / 2.0f;
     float point_middle_y = (_y1_ + _y2_) / 2.0f;

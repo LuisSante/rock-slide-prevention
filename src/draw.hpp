@@ -31,7 +31,6 @@ public:
     void index_ellipse(unsigned int index[]);
 
     friend class Move;
-    friend class Superposition;
     friend class PointContact;
     friend class Speed_F_Normal;
 };
