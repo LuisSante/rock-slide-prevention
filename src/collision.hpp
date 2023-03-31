@@ -13,7 +13,7 @@
 
 using namespace std;
 
-std::ofstream impact("../src/reports/impact.txt");
+std::ofstream impact("C:/Users/Usuario/Desktop/rock_slide/src/reports/impact.txt");
 
 class PointContact
 {
@@ -206,21 +206,21 @@ vector<float> PointContact::point_collision(float current_center_mass_X, float c
     double _x2_ = ((matrix_angles[0][0] * _x_2) + (matrix_angles[0][1] * _y_2)) + current_center_mass_X;
     double _y2_ = ((matrix_angles[1][0] * _x_2) + (matrix_angles[1][1] * _y_2)) + current_center_mass_Y;
 
-    cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
+    // cout << _x1_ << " " << _y1_ << " " << _x2_ << " " << _y2_ << endl;
 
     if ((_x1_ < 0 || _x2_ < 0) && discriminant >= 0)
         collision = false;
 
-    // glm::vec2 upmost = (vertices_slope[1] > vertices_slope[4]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
-    // glm::vec2 bottommost = (vertices_slope[1] < vertices_slope[4]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
-    // glm::vec2 rightmost = (vertices_slope[0] > vertices_slope[3]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
-    // glm::vec2 leftmost = (vertices_slope[0] < vertices_slope[3]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    //glm::vec2 upmost = (vertices_slope[1] > vertices_slope[4]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    //glm::vec2 bottommost = (vertices_slope[1] < vertices_slope[4]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    //glm::vec2 rightmost = (vertices_slope[0] > vertices_slope[3]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
+    //glm::vec2 leftmost = (vertices_slope[0] < vertices_slope[3]) ? glm::vec2(vertices_slope[0], vertices_slope[1]) : glm::vec2(vertices_slope[3], vertices_slope[4]);
     //
-    // if (_x1_ < leftmost.x && _x2_ < leftmost.x && _x1_ > rightmost.x && _x2_ > rightmost.x && discriminant >= 0)
-    //   collision = false;
-    // if (_y1_ < bottommost.y && _y2_ < bottommost.y && _y1_ > rightmost.y && _y2_ > rightmost.y && discriminant >= 0)
-    //   collision = false;
-
+    //if (_x1_ < leftmost.x && _x2_ < leftmost.x && _x1_ > rightmost.x && _x2_ > rightmost.x && discriminant >= 0)
+    //    collision = false;
+    //if (_y1_ < bottommost.y && _y2_ < bottommost.y && _y1_ > rightmost.y && _y2_ > rightmost.y && discriminant >= 0)
+    //    collision = false;
+//
     float point_middle_x = (_x1_ + _x2_) / 2.0f;
     float point_middle_y = (_y1_ + _y2_) / 2.0f;
 

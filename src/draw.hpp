@@ -12,7 +12,7 @@
 #define M_PI 3.14159265358979323846f
 
 using std::vector;
-std::ofstream vertex("C:/Users/Usuario/Desktop/hilarios/src/reports/vertex.txt");
+std::ofstream vertex("C:/Users/Usuario/Desktop/rock_slide/src/reports/vertex.txt");
 
 class Draw
 {

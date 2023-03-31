@@ -10,6 +10,11 @@
 
 using namespace std;
 
+std::ofstream Rk_pos_x("C:/Users/Usuario/Desktop/rock_slide/src/reports/Rk_pos_x.txt");
+std::ofstream Rk_pos_y("C:/Users/Usuario/Desktop/rock_slide/src/reports/Rk_pos_y.txt");
+std::ofstream Rk_w("C:/Users/Usuario/Desktop/rock_slide/src/reports/Rk_w.txt");
+std::ofstream Rk_theta("C:/Users/Usuario/Desktop/rock_slide/src/reports/Rk_theta.txt");
+
 class Move
 {
 private:
@@ -93,7 +98,12 @@ void Move::movement(float &velocity_x, float &velocity_y, float &position_x, flo
     velocity_y += (h / 6.0f) * (k1vy + 2.0f * k2vy + 2.0f * k3vy + k4vy);
     theta += (h / 6.0f) * (k1theta + 2.0f * k2theta + 2.0f * k3theta + k4theta);
 
-    //cout << velocity_x << " " << velocity_y << endl;
+    Rk_pos_x << "k1 : " << k1vx << " k2 : " << k2vx << " k3 : " << k3vx << " k4: " << k4vx << " vx : " << velocity_x << " k1 : " << k1x << " k2 : " << k2x << " k3 : " << k3x << " k4: " << k4x << " X: " << position_x << endl;
+    Rk_pos_y << "k1 : " << k1vy << " k2 : " << k2vy << " k3 : " << k3vy << " k4: " << k4vy << " vy : " << velocity_y << " k1 : " << k1y << " k2 : " << k2y << " k3 : " << k3y << " k4: " << k4y << " Y: " << position_y << endl;
+    Rk_w << "k1 : " << k1w << " k2 : " << k2w << " k3 : " << k3w << " k4: " << k4w << " w : " << w << " k1 : " << k1theta << " k2 : " << k2theta << " k3 : " << k3theta << " k4: " << k4theta << " theta: " << theta << endl;
+    // Rk_theta<<"k1 : " << k2theta << " k2 : " << k2theta << " k3 : " <<k3theta << " k4: " << k4theta<< " theta : " << theta<< "k1 : " << << " k2 : " << " k3 : " << " k4: " << " X: "
+
+    // cout << velocity_x << " " << velocity_y << endl;
 }
 
 #endif

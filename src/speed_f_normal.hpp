@@ -19,7 +19,7 @@
 
 using namespace std;
 
-ofstream velocity_report("..src/reports/velocity_report.txt");
+ofstream velocity_report("C:/Users/Usuario/Desktop/rock_slide/src/reports/velocity_report.txt");
 
 class Speed_F_Normal
 {
@@ -287,7 +287,7 @@ void Speed_F_Normal::calculate_normal_force(float current_center_mass_X, float c
     F_normal.first = FN_i;
     F_normal.second = FN_j;
 
-    velocity_report << " Fn_i " << F_normal.first << " Fn_j " << F_normal.second << endl;
+    velocity_report << "Fn_i " << F_normal.first << " Fn_j " << F_normal.second << endl;
 
     FN = sqrt((FN_i * FN_i) + (FN_j * FN_j));
 }
@@ -343,8 +343,8 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
     F_tangential_buffer_i = -F_tangential_buffer_i;
     F_tangential_buffer_j = -F_tangential_buffer_j;
 
-    velocity_report << " actual_calculate_tangential_force_resort_i : " << actual_calculate_tangential_force_resort_i << " actual_calculate_tangential_force_resort_j : " << actual_calculate_tangential_force_resort_j << endl;
-    velocity_report << " F_tangential_buffer_i : " << F_tangential_buffer_i << " F_tangential_buffer_j : " << F_tangential_buffer_j << endl;
+    velocity_report << "actual_calculate_tangential_force_resort_i : " << actual_calculate_tangential_force_resort_i << " actual_calculate_tangential_force_resort_j : " << actual_calculate_tangential_force_resort_j << endl;
+    velocity_report << "F_tangential_buffer_i : " << F_tangential_buffer_i << " F_tangential_buffer_j : " << F_tangential_buffer_j << endl;
 
     float Ft_i = actual_calculate_tangential_force_resort_i + F_tangential_buffer_i;
     float Ft_j = actual_calculate_tangential_force_resort_j + F_tangential_buffer_j;
@@ -366,7 +366,7 @@ void Speed_F_Normal::calculate_tangential_force(float current_center_mass_X, flo
     velocity_report << "CLASS SPEED "
                     << "Ft_i : " << F_tangential.first << " Ft_j : " << F_tangential.second << endl;
 
-    velocity_report << " Ft " << Ft << endl;
+    velocity_report << "Ft " << Ft << endl;
 }
 
 void Speed_F_Normal::momentos(float current_center_mass_X, float current_center_mass_Y, float current_velocity_X, float current_velocity_Y, float angle, float w, float h, float vertex_slope[])

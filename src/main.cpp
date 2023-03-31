@@ -22,9 +22,9 @@
 
 using std::vector;
 std::ofstream report("C:/Users/Usuario/Desktop/rock_slide/src/reports/report.txt");
-std::ofstream rebound("../src/reports/report_rebound.txt");
+std::ofstream rebound("C:/Users/Usuario/Desktop/rock_slide/src/reports/report_rebound.txt");
 std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/rock_slide/src/reports/frame_RK.txt");
-std::ofstream Rocks_Out("../src/reports/Rocks_Out.txt");
+std::ofstream Rocks_Out("C:/Users/Usuario/Desktop/rock_slide/src/reports/Rocks_Out.txt");
 // Window Size Settings
 constexpr unsigned int SCR_WIDTH = 1000;
 constexpr unsigned int SCR_HEIGHT = 1000;
@@ -106,16 +106,16 @@ int main()
     // Initial Setup Stuff
     /*****************************************************************************/
     // General Scale
-    float scale = 30.0f;
+    float scale = 15.0f;
 
-    float center_mass_x = 0.0f;
-    float center_mass_y = 26.0f;
+    float center_mass_x = 0.55f;
+    float center_mass_y = 13.0f;
 
-    float a = 1.1f;
-    float b = 0.8f;
+    float a = 0.55f;
+    float b = 0.4f;
 
     // Rock Computing Utils [RK]
-    float vx = 0.5f;
+    float vx = 1.0f;
     float vy = 0.0f;
     float theta = 0.0f * M_PI / 180.0f;
     Draw ellipse(a, b, NUMBER_OF_SECTIONS);
@@ -223,11 +223,10 @@ int main()
 
     /*****************************************************************************/
 
-    float t0 = 0.0f;
-    float tf = 30.0f;
+    constexpr float tf = 30.0f;
+    static const float h = 0.00001f;
     float MG = 0.0f;
     float w = 0.2f;
-    static const float h = 0.01f;
 
     int i = 0;
     float t = 0.0f;
@@ -289,8 +288,8 @@ int main()
             speed.momentos(out_vertex[0], out_vertex[1], vx, vy, angle_degrees, w, h, slope_vertex_data);
             print_report(t, out_vertex, point, speed);
             point.collision = false;
-            window.close();
-            continue;
+            //window.close();
+            //continue;
         }
 
         i++;
@@ -306,7 +305,7 @@ int main()
         window.swapBuffers();
         timer.tick();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
