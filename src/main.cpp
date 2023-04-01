@@ -25,6 +25,8 @@ std::ofstream report("C:/Users/Usuario/Desktop/rock_slide/src/reports/report.txt
 std::ofstream rebound("C:/Users/Usuario/Desktop/rock_slide/src/reports/report_rebound.txt");
 std::ofstream Frame_Rk("C:/Users/Usuario/Desktop/rock_slide/src/reports/frame_RK.txt");
 std::ofstream Rocks_Out("C:/Users/Usuario/Desktop/rock_slide/src/reports/Rocks_Out.txt");
+std::ofstream module("C:/Users/Usuario/Desktop/rock_slide/src/reports/module.txt");
+
 // Window Size Settings
 constexpr unsigned int SCR_WIDTH = 1000;
 constexpr unsigned int SCR_HEIGHT = 1000;
@@ -72,6 +74,16 @@ void print_vertex(float out_vertex[], float theta)
     }
     report << endl
            << endl;
+}
+
+void print_module(float t, float velocity_x, float velocity_y)
+{
+    float vel_x = velocity_x * velocity_x;
+    float vel_y = velocity_y * velocity_y;
+
+    float mod = sqrt(vel_x + vel_y);
+
+    module << "t : " << t << " modulo : " << mod << endl;
 }
 
 void print_report(float t, float out_vertex[], PointContact point, Speed_F_Normal speed)
@@ -224,7 +236,7 @@ int main()
     /*****************************************************************************/
 
     constexpr float tf = 30.0f;
-    static const float h = 0.00001f;
+    static const float h = 0.01f;
     float MG = 0.0f;
     float w = 0.2f;
 
@@ -268,6 +280,7 @@ int main()
 
         t = i * h;
         print_rk(t, center_mass_x, center_mass_y, vx, vy, theta, speed);
+        print_module(t, vx, vy);
         rk.movement(vx, vy, center_mass_x, center_mass_y, theta, w, speed.M_G, h, t, i, speed.F_normal, speed.F_tangential);
 
         model_rock_shader = glm::translate(model_rock_shader, glm::vec3(center_mass_x, center_mass_y, 0.0f));
@@ -288,8 +301,8 @@ int main()
             speed.momentos(out_vertex[0], out_vertex[1], vx, vy, angle_degrees, w, h, slope_vertex_data);
             print_report(t, out_vertex, point, speed);
             point.collision = false;
-            //window.close();
-            //continue;
+            // window.close();
+            // continue;
         }
 
         i++;
@@ -305,7 +318,7 @@ int main()
         window.swapBuffers();
         timer.tick();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     glDeleteVertexArrays(1, &VAO_rock);
